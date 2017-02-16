@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="play_mode">
+        <item>Order Play</item>
+        <item>Single Play</item>
+        <item>Random Play</item>
+    </string-array>
+</resources>
