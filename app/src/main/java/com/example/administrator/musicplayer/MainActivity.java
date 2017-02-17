@@ -418,6 +418,7 @@ public class MainActivity extends AppCompatActivity implements
         Intent Intent_PlayPause = new Intent();
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Intent_PlayPause.putExtra( TransportFlag.state, TransportFlag.PlayDefault );
+            Log.e( TransportFlag.state, TransportFlag.PlayDefault );
         } else {
             switch (mbtnPlay.getText().toString()) {
                 case "PLAY":
@@ -600,6 +601,7 @@ public class MainActivity extends AppCompatActivity implements
             String NextItem = intent.getStringExtra( TransportFlag.NextItem );
             state = intent.getStringExtra( TransportFlag.state );
             CurrentItem = intent.getParcelableExtra( TransportFlag.CurrentItem );
+            Log.e( "state",state );
             switch (state) {
                 case TransportFlag.LoadMusic:                                       //接收加载音乐
                     AsyncLoadMusic();

@@ -12,6 +12,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -57,8 +58,10 @@ public class MusicService extends Service {
 
         //设置播放线程
         mRunnablePlay = new Runnable() {
+
             @Override
             public void run() {
+                Log.e( "mRunnablePlay","mRunnablePlaymRunnablePlaymRunnablePlaymRunnablePlay" );
                 mediaplayer.start();
                 mHandlerSeekbar.post( mRunnableSeekbar );
             }
@@ -68,6 +71,7 @@ public class MusicService extends Service {
         mRunnableSeekbar = new Runnable() {
             @Override
             public void run() {
+                Log.e( "mRunnableSeekbar","mRunnableSeekbarmRunnableSeekbarmRunnableSeekbarmRunnableSeekbar" );
                 try {
                     Intent Intent_UpdateSeekBar = new Intent();
                     Intent_UpdateSeekBar.putExtra( "SeekBarTo", mediaplayer.getCurrentPosition() );
@@ -260,6 +264,10 @@ public class MusicService extends Service {
             int progress = intent.getIntExtra( "SeekTo", 0 );
             mode = intent.getIntExtra( "mode", 0 );
             state = intent.getStringExtra( TransportFlag.state );
+            Log.e( "state",state );
+//            if(state.equals( TransportFlag.PlayDefault )){
+//                playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
+//            }
             switch (state) {
                 case TransportFlag.PlayDefault:                                 //接收默认播放曲目
                     playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
