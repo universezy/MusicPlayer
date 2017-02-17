@@ -47,6 +47,20 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
         </activity>
+
+        <service android:name="com.example.administrator.musicplayer.MusicService"/>
+
+        <receiver android:name="com.example.administrator.musicplayer.MusicService">
+            <intent-filter>
+                <action android:name="MainActivity"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="com.example.administrator.musicplayer.MainActivity">
+            <intent-filter>
+                <action android:name="MusicService"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

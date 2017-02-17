@@ -1,18 +1,18 @@
 package com.example.administrator.musicplayer;
 
+import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -36,10 +36,7 @@ import com.tencent.connect.share.QQShare;
 import com.tencent.tauth.Tencent;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements
         View.OnClickListener,
@@ -60,50 +57,43 @@ public class MainActivity extends AppCompatActivity implements
     //搜索视图
     public SearchView msvSearch;
     //文本视图
-    private TextView mtvName, mtvCurrentProgress, mtvTotalProgress;
+    public TextView mtvName, mtvCurrentProgress, mtvTotalProgress;
     //列表视图
-    private ListView mlvList;
+    public ListView mlvList;
     //拖动条
-    private SeekBar msbPlayer;
+    public SeekBar msbPlayer;
     //抽屉布局
-    private DrawerLayout mdlMain;
+    public DrawerLayout mdlMain;
     //导航视图
     public NavigationView mnvMain;
+
     /**
      * 工具实例
      **/
-    //媒体播放器
-    private MediaPlayer mediaplayer = new MediaPlayer();
-    //列表适配器
-    private ListAdapter mlaList;
     //列表管理器
     private Handler mHandlerList = new Handler();
-    //拖动条管理器
-    private Handler mHandlerSeekbar = new Handler();
-    //播放线程
-    private Runnable mRunnablePlay;
-    //拖动条线程
-    private Runnable mRunnableSeekbar;
+    //列表适配器
+    public ListAdapter mlaList;
     //腾讯API
     protected Tencent mTencent;
+    //接收器
+    MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
 
     /**
      * 自定义元素
      **/
     //播放列表
     public static ArrayList<MusicBean> mMusicList = new ArrayList<>();
-    //播放列表索引，初始化为第一首
-    private int ItemLocationIndex = 0;
-    //播放顺序数组
-    private int[] PlayArray;
-    //播放顺序数组索引
-    private int PlayArrayIndex = 0;
-    //播放模式序号
-    private int choice = 0;
     //应用运行状态
-    private boolean isApplicationAlive;
+    boolean isApplicationAlive;
+    //服务状态
+    public String state;
+    //播放模式序号
+    private int mode = 0;
     //分享类型
     final int ShareByQQ = 0, ShareByWechat = 1;
+    //当前播放条目
+    public MusicBean CurrentItem;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -113,7 +103,17 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_main );
-        mTencent = Tencent.createInstance( R.string.APPID + "", this );
+        isApplicationAlive = true;
+
+        //注册接收器
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction( TransportFlag.MainActivity );
+        registerReceiver( mainActivityReceiver, intentFilter );
+
+        //启动后台Service
+        Intent ServiceIntent = new Intent( this, MusicService.class );
+        startService( ServiceIntent );
+
         InitLayout();
     }
 
@@ -125,8 +125,6 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        //将线程销毁掉
-        mHandlerSeekbar.removeCallbacks( mRunnableSeekbar );
         super.onDestroy();
     }
 
@@ -134,39 +132,8 @@ public class MainActivity extends AppCompatActivity implements
      * 初始化布局
      **/
     public void InitLayout() {
-        //设置应用运行状态
-        isApplicationAlive = true;
-
-        //设置播放线程
-        mRunnablePlay = new Runnable() {
-            @Override
-            public void run() {
-                mediaplayer.start();
-                mHandlerSeekbar.post( mRunnableSeekbar );
-            }
-        };
-
-        //设置拖动条线程
-        mRunnableSeekbar = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (isApplicationAlive) {
-                        msbPlayer.setProgress( mediaplayer.getCurrentPosition() );
-                        mtvCurrentProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
-                        mHandlerSeekbar.postDelayed( mRunnableSeekbar, 1000 );
-                    }
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
         //设置列表适配器
         mlaList = new ListAdapter( getApplicationContext(), R.layout.item_music_list_layout );
-
-        //加载歌曲
-        AsyncLoadMusic();
 
         //设置列表视图
         mlvList = (ListView) findViewById( R.id.lvList );
@@ -230,10 +197,16 @@ public class MainActivity extends AppCompatActivity implements
                     setPlayMode();
                     break;
                 case R.id.btnLast:          //上一首
-                    LastMusic();
+                    Intent Intent_Last = new Intent();
+                    Intent_Last.putExtra( "state", TransportFlag.Last );
+                    Intent_Last.setAction( TransportFlag.MainActivity );
+                    sendBroadcast( Intent_Last );
                     break;
                 case R.id.btnNext:          //下一首
-                    NextMusic();
+                    Intent Intent_Next = new Intent();
+                    Intent_Next.putExtra( "state", TransportFlag.Next );
+                    Intent_Next.setAction( TransportFlag.MainActivity );
+                    sendBroadcast( Intent_Next );
                     break;
                 case R.id.btnPlay:          //播放
                     Play_Pause();
@@ -263,15 +236,12 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.nav_setToRingtone) {             //设为铃声
-            MessageToUser();
-            //setMusicTo( RingtoneManager.TYPE_RINGTONE );
-        } else if (id == R.id.nav_setToNotification) {  //设为提示音
-            MessageToUser();
-            //setMusicTo( RingtoneManager.TYPE_RINGTONE );
-        } else if (id == R.id.nav_setToAlarm) {         //设为闹钟
-            MessageToUser();
-            //setMusicTo( RingtoneManager.TYPE_RINGTONE );
+        if (id == R.id.nav_setToRingtone) {             //设为铃声      已实现
+            setMusicTo( RingtoneManager.TYPE_RINGTONE );
+        } else if (id == R.id.nav_setToNotification) {  //设为提示音    已实现
+            setMusicTo( RingtoneManager.TYPE_RINGTONE );
+        } else if (id == R.id.nav_setToAlarm) {         //设为闹钟      已实现
+            setMusicTo( RingtoneManager.TYPE_RINGTONE );
         } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送
             MessageToUser();
             //SendMusicTo();
@@ -283,11 +253,11 @@ public class MainActivity extends AppCompatActivity implements
         } else if (id == R.id.nav_shareByWechat) {      //通过微信分享
             //ShareMusicTo(ShareByWechat);
             MessageToUser();
-        }else if (id == R.id.nav_minimize) {            //最小化到后台播放
+        } else if (id == R.id.nav_minimize) {            //最小化到后台播放
             PlayInBackground();
-        }else if (id == R.id.nav_version) {             //版本号   已实现
+        } else if (id == R.id.nav_version) {             //版本号       已实现
             ShowVersion();
-        } else if (id == R.id.nav_exit) {               //退出应用  已实现
+        } else if (id == R.id.nav_exit) {               //退出应用      已实现
             Exit();
         } else {
             mdlMain = (DrawerLayout) findViewById( R.id.drawer_layout );
@@ -302,11 +272,15 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         msvSearch.clearFocus();
-        ItemLocationIndex = position;
-        PlayArrayIndex = position;
-        if ((mlaList.getItem( ItemLocationIndex )) != null) {
-            playMusic( ((MusicBean) mlaList.getItem( ItemLocationIndex )).getMusicPath() );
-            mtvName.setText( ((MusicBean) mlaList.getItem( ItemLocationIndex )).getMusicName() );
+        if ((mlaList.getItem( position )) != null) {
+            Intent Intent_onItemClick = new Intent();
+            Intent_onItemClick.putExtra( "position", position );
+            Intent_onItemClick.putExtra( "path", ((MusicBean) mlaList.getItem( position )).getMusicPath() );
+            Intent_onItemClick.putExtra( TransportFlag.state, TransportFlag.PlayList );
+            Intent_onItemClick.setAction( TransportFlag.MainActivity );
+            sendBroadcast( Intent_onItemClick );
+
+            mbtnPlay.setText( "PAUSE" );
         }
     }
 
@@ -344,7 +318,12 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {  //停止拖动
-        mediaplayer.seekTo( seekBar.getProgress() );
+        Intent Intent_SeekTo = new Intent();
+        Intent_SeekTo.putExtra( "SeekTo", seekBar.getProgress() );
+        Intent_SeekTo.putExtra( TransportFlag.state, TransportFlag.SeekTo );
+        Intent_SeekTo.setAction( TransportFlag.MainActivity );
+        sendBroadcast( Intent_SeekTo );
+
     }
 
     /*****************************************************************************************
@@ -355,11 +334,13 @@ public class MainActivity extends AppCompatActivity implements
      * 异步线程载入歌曲
      **/
     public void AsyncLoadMusic() {
+        for (MusicBean mb : mMusicList) {
+            Log.e( mb.getMusicName(), mb.getMusicPath() );
+        }
         new Thread( new Runnable() {
             @Override
             public void run() {
                 mMusicList.clear();
-                LoadMusic( Environment.getExternalStorageDirectory() + File.separator );
                 mHandlerList.post( new Runnable() {
                     @Override
                     public void run() {
@@ -368,40 +349,6 @@ public class MainActivity extends AppCompatActivity implements
                 } );
             }
         } ).start();
-    }
-
-    /**
-     * 载入歌曲
-     **/
-    public void LoadMusic(String dirName) {
-        Cursor cursor = getContentResolver().query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null,
-                MediaStore.Audio.Media.DATA + " like ?",
-                new String[]{dirName + "%"},
-                MediaStore.Audio.Media.DEFAULT_SORT_ORDER );
-        if (cursor == null) return;
-
-        MusicBean music;
-        for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-            //如果不是音乐
-            String isMusic = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.IS_MUSIC ) );
-            if (isMusic != null && isMusic.equals( "" )) continue;
-            music = new MusicBean();
-            String path;
-            if ((path = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.DATA ) )).endsWith( ".mp3" )) {
-                music.setMusicName( cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.TITLE ) ) );
-                music.setMusicPath( path );
-                mMusicList.add( music );
-            }
-        }
-        cursor.close();
-        //设置默认的播放顺序为顺序播放
-        PlayArray = new int[mMusicList.size()];
-        for (int i = 0; i < PlayArray.length; i++) {
-            PlayArray[i] = i;
-            Log.e( "Name  ", mMusicList.get( i ).getMusicName() );
-            Log.e( "Path  ", mMusicList.get( i ).getMusicPath() );
-        }
     }
 
     /**
@@ -447,123 +394,47 @@ public class MainActivity extends AppCompatActivity implements
                 .setSingleChoiceItems( getResources().getStringArray( R.array.play_mode ), 0,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                choice = which;
+                                mode = which;
                             }
                         }
                 )
                 .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mbtnMode.setText( getResources().getStringArray( R.array.play_mode )[choice] );
+                        mbtnMode.setText( getResources().getStringArray( R.array.play_mode )[mode] );
+                        Intent Intent_PlayMode = new Intent();
+                        Intent_PlayMode.putExtra( "mode", mode );
+                        Intent_PlayMode.setAction( TransportFlag.MainActivity );
+                        sendBroadcast( Intent_PlayMode );
                         dialog.dismiss();
-                        if (choice == 2) {
-                            int temp;
-                            //生成随机播放列表
-                            Random random = new Random();
-                            for (int i = 0; i < PlayArray.length; i++) {
-                                int j = random.nextInt( PlayArray.length );
-                                temp = PlayArray[i];
-                                PlayArray[i] = PlayArray[j];
-                                PlayArray[j] = temp;
-                            }
-                        }
                     }
                 } )
                 .show();
     }
 
     /**
-     * 上一首
-     **/
-    public void LastMusic() {
-        ItemLocationIndex--;
-        ItemLocationIndex = (ItemLocationIndex + mMusicList.size()) % mMusicList.size();
-        mediaplayer.stop();
-        playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
-    }
-
-    /**
-     * 下一首
-     **/
-    public void NextMusic() {
-        ItemLocationIndex++;
-        ItemLocationIndex = ItemLocationIndex % mMusicList.size();
-        mediaplayer.stop();
-        playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
-    }
-
-    /**
      * 播放和暂停切换
      **/
     public void Play_Pause() {
+        Intent Intent_PlayPause = new Intent();
         if (mtvName.getText().toString().equals( "Music Name" )) {
-            playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
+            Intent_PlayPause.putExtra( TransportFlag.state, TransportFlag.PlayDefault );
         } else {
             switch (mbtnPlay.getText().toString()) {
                 case "PLAY":
-                    mediaplayer.start();
+                    Intent_PlayPause.putExtra( TransportFlag.state, TransportFlag.Play );
                     mbtnPlay.setText( "PAUSE" );
                     break;
                 case "PAUSE":
-                    mediaplayer.pause();
+                    Intent_PlayPause.putExtra( TransportFlag.state, TransportFlag.Pause );
                     mbtnPlay.setText( "PLAY" );
                     break;
                 default:
                     break;
             }
         }
-    }
-
-    /**
-     * 播放音乐
-     **/
-    public void playMusic(String path) {
-        try {
-            mediaplayer.reset();
-            mediaplayer.setDataSource( path );
-            mediaplayer.setAudioStreamType( AudioManager.STREAM_MUSIC );
-            mediaplayer.prepare();
-            mediaplayer.setOnCompletionListener( new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    if (!(mbtnMode.getText().toString().equals( "Single Play" ))) {
-                        PlayArrayIndex++;
-                        PlayArrayIndex = PlayArrayIndex % mMusicList.size();
-                        ItemLocationIndex = PlayArray[PlayArrayIndex];
-                    }
-                    Thread ThreadToast = new Thread( new Runnable() {
-                        @Override
-                        public void run() {
-                            Looper.prepare();
-                            Toast.makeText( getApplicationContext(), "Next: " + mMusicList.get( ItemLocationIndex ).getMusicName(), Toast.LENGTH_SHORT ).show();
-                            Looper.loop();
-                        }
-                    } );
-                    ThreadToast.start();
-                    try {
-                        Thread.sleep( 3000 );
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
-                }
-            } );
-            mediaplayer.setOnPreparedListener( new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    msbPlayer.setMax( mediaplayer.getDuration() );
-                    mtvTotalProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getDuration() ) ) );
-                }
-            } );
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        mHandlerSeekbar.post( mRunnablePlay );
-        mbtnPlay.setText( "PAUSE" );
-        mtvName.setText( mMusicList.get( ItemLocationIndex ).getMusicName() );
-
-        /**  设置正在播放的条目背景颜色未实现 **/
-
+        Intent_PlayPause.setAction( TransportFlag.MainActivity );
+        sendBroadcast( Intent_PlayPause );
     }
 
     /**
@@ -607,7 +478,7 @@ public class MainActivity extends AppCompatActivity implements
                 default:
                     break;
             }
-            File file = new File( mMusicList.get( ItemLocationIndex ).getMusicPath() );
+            File file = new File( CurrentItem.getMusicPath() );
             ContentValues values = new ContentValues();
             values.put( MediaStore.MediaColumns.DATA, file.getAbsolutePath() );
             values.put( MediaStore.MediaColumns.TITLE, file.getName() );
@@ -618,16 +489,19 @@ public class MainActivity extends AppCompatActivity implements
             values.put( MediaStore.Audio.Media.IS_MUSIC, false );
             Uri uri = MediaStore.Audio.Media.getContentUriForPath( file.getAbsolutePath() );
 
-            Scan( new File( uri.getPath() ) );
+            Cursor cursor = this.getContentResolver().query( uri, null, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()}, null );
+            Uri newUri = null;
+            if (cursor.moveToFirst() && cursor.getCount() > 0) {
+                String _id = cursor.getString( 0 );
+                getContentResolver().update( uri, values, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()} );
+                newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
+            }
 
-            /**  getEncodedPath = /external/audio/media , getPath = /external/audio/media , newUri  =  null   **/
-
-            Uri newUri = this.getContentResolver().insert( uri, values );
             RingtoneManager.setActualDefaultRingtoneUri( this, ringType, newUri );
 
             new AlertDialog.Builder( this )
                     .setTitle( strDialog )
-                    .setMessage( mMusicList.get( ItemLocationIndex ).getMusicName() )
+                    .setMessage( RingtoneManager.getRingtone( this, newUri ).getTitle( this ) )
                     .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -636,24 +510,6 @@ public class MainActivity extends AppCompatActivity implements
                     } ).show();
 
             Log.e( "ringtone:", RingtoneManager.getRingtone( this, newUri ).getTitle( this ) );
-        }
-    }
-
-    public void Scan(File file) {
-        Log.e( "---------------:", "00000000000000000000" );
-        if (file.exists()) {
-            Log.e( "111111111111111:", "00000000000000000000" );
-        }
-        if (file.isDirectory()) {
-            Log.e( "Directory", file.getAbsolutePath() );
-            for (File f : file.listFiles()) {
-                Scan( f );
-            }
-            Log.e( "+++++++++++++++++", file.listFiles().length + "" );
-        } else if (file.isFile()) {
-            Log.e( "File", file.getAbsolutePath() );
-        } else {
-            Log.e( "Nothing", file.getAbsolutePath() );
         }
     }
 
@@ -671,6 +527,7 @@ public class MainActivity extends AppCompatActivity implements
         if (mtvName.getText().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
         } else {
+            mTencent = Tencent.createInstance( R.string.APPID + "", this );
             switch (ShareBy) {
                 case ShareByQQ:
                     final Bundle params = new Bundle();
@@ -694,7 +551,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 后台播放
      **/
-    public void PlayInBackground(){
+    public void PlayInBackground() {
 
     }
 
@@ -722,11 +579,49 @@ public class MainActivity extends AppCompatActivity implements
      * 退出应用
      **/
     public void Exit() {
-        if (mediaplayer.isPlaying()) {
-            mediaplayer.stop();
-            mediaplayer.release();
-            isApplicationAlive = false;
-        }
+        Intent Intent_Exit = new Intent();
+        Intent_Exit.putExtra( TransportFlag.state, TransportFlag.Exit );
+        Intent_Exit.setAction( TransportFlag.MainActivity );
+        sendBroadcast( Intent_Exit );
+        unregisterReceiver( mainActivityReceiver );
+        isApplicationAlive = false;
         MainActivity.this.finish();
+    }
+
+    /**
+     * 接收器
+     **/
+    class MainActivityReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.e( "context", "contextcontextcontextcontext" );
+            mMusicList = intent.getParcelableArrayListExtra( "mMusicList" );
+            int SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
+            int SeekBarMax = intent.getIntExtra( "SeekBarMax", 0 );
+            String TextViewTo = intent.getStringExtra( "TextViewTo" );
+            String NextItem = intent.getStringExtra( TransportFlag.NextItem );
+            state = intent.getStringExtra( TransportFlag.state );
+            CurrentItem = intent.getParcelableExtra( TransportFlag.CurrentItem );
+            switch (state) {
+                case TransportFlag.LoadMusic:
+                    AsyncLoadMusic();
+                    break;
+                case TransportFlag.SeekTo:
+                    msbPlayer.setProgress( SeekBarTo );
+                    mtvCurrentProgress.setText( TextViewTo );
+                    break;
+                case TransportFlag.NextItem:
+                    Toast.makeText( getApplicationContext(), "Next: " + NextItem, Toast.LENGTH_SHORT ).show();
+                    break;
+                case TransportFlag.SeekPrepare:
+                    msbPlayer.setProgress( SeekBarMax );
+                    mtvTotalProgress.setText( TextViewTo );
+                    break;
+                case TransportFlag.CurrentItem:
+                    mtvName.setText( CurrentItem.getMusicName() );
+                default:
+                    break;
+            }
+        }
     }
 }
