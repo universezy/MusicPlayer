@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 
+import static com.example.administrator.musicplayer.TransportFlag.CurrentItem;
+
 public class MusicService extends Service {
     public IBinder mBinder;      // interface for clients that bind
     boolean mAllowRebind; // indicates whether onRebind should be used
@@ -58,12 +60,11 @@ public class MusicService extends Service {
 
         //设置播放线程
         mRunnablePlay = new Runnable() {
-
             @Override
             public void run() {
-                Log.e( "mRunnablePlay","mRunnablePlaymRunnablePlaymRunnablePlaymRunnablePlay" );
-                mediaplayer.start();
+                Log.e( "mRunnablePlay", "mRunnablePlaymRunnablePlaymRunnablePlaymRunnablePlay" );
                 mHandlerSeekbar.post( mRunnableSeekbar );
+                mediaplayer.start();
             }
         };
 
@@ -71,14 +72,16 @@ public class MusicService extends Service {
         mRunnableSeekbar = new Runnable() {
             @Override
             public void run() {
-                Log.e( "mRunnableSeekbar","mRunnableSeekbarmRunnableSeekbarmRunnableSeekbarmRunnableSeekbar" );
+                Log.e( "mRunnableSeekbar", "mRunnableSeekbarmRunnableSeekbarmRunnableSeekbarmRunnableSeekbar" );
                 try {
-                    Intent Intent_UpdateSeekBar = new Intent();
+                    Intent Intent_UpdateSeekBar = new Intent( TransportFlag.MainActivity );
                     Intent_UpdateSeekBar.putExtra( "SeekBarTo", mediaplayer.getCurrentPosition() );
                     Intent_UpdateSeekBar.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
-                    Intent_UpdateSeekBar.setAction( TransportFlag.MainActivity );
+                    Intent_UpdateSeekBar.putExtra( TransportFlag.SeekTo, TransportFlag.SeekTo );
+                    Log.e( "SeekBarTo", mediaplayer.getCurrentPosition() + "" );
+                    Log.e( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
                     sendBroadcast( Intent_UpdateSeekBar );
-                    mHandlerSeekbar.postDelayed( mRunnableSeekbar, 500 );
+                    //mHandlerSeekbar.postDelayed( mRunnableSeekbar, 1000 );
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -110,10 +113,10 @@ public class MusicService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        //将线程销毁掉
-        mHandlerSeekbar.removeCallbacks( mRunnableSeekbar );
         mediaplayer.stop();
         mediaplayer.release();
+        //将线程销毁掉
+        mHandlerSeekbar.removeCallbacks( mRunnableSeekbar );
         unregisterReceiver( musicServiceReceiver );
     }
 
@@ -123,6 +126,7 @@ public class MusicService extends Service {
      **/
     public void LoadMusic() {
         mMusicList.clear();
+        //利用游标查找媒体数据库中的音乐文件
         Cursor cursor = this.getContentResolver().query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null,
                 MediaStore.Audio.Media.DATA + " like ?",
@@ -148,10 +152,9 @@ public class MusicService extends Service {
             for (int i = 0; i < PlayArray.length; i++) {
                 PlayArray[i] = i;
             }
-            Intent Intent_SendMusicList = new Intent();
+            Intent Intent_SendMusicList = new Intent( TransportFlag.MainActivity );
             Intent_SendMusicList.putParcelableArrayListExtra( "mMusicList", mMusicList );
             Intent_SendMusicList.putExtra( TransportFlag.state, TransportFlag.LoadMusic );
-            Intent_SendMusicList.setAction( TransportFlag.MainActivity );
             //将播放列表发给Acticity用于装载ListView
             sendBroadcast( Intent_SendMusicList );
         }
@@ -171,6 +174,7 @@ public class MusicService extends Service {
      * 下一首
      **/
     public void NextMusic() {
+        Log.e( "Next", "Next ++++++" );
         ItemLocationIndex++;
         ItemLocationIndex = ItemLocationIndex % mMusicList.size();
         mediaplayer.stop();
@@ -214,10 +218,9 @@ public class MusicService extends Service {
                     PlayArrayIndex++;
                     PlayArrayIndex = PlayArrayIndex % mMusicList.size();
                     ItemLocationIndex = PlayArray[PlayArrayIndex];
-                    Intent Intent_NextItem = new Intent();
+                    Intent Intent_NextItem = new Intent( TransportFlag.MainActivity );
                     Intent_NextItem.putExtra( TransportFlag.NextItem, mMusicList.get( ItemLocationIndex ).getMusicName() );
                     Intent_NextItem.putExtra( TransportFlag.state, TransportFlag.NextItem );
-                    Intent_NextItem.setAction( TransportFlag.MainActivity );
                     //发送下一首给Activity用于Toast
                     sendBroadcast( Intent_NextItem );
                     try {
@@ -231,25 +234,28 @@ public class MusicService extends Service {
             mediaplayer.setOnPreparedListener( new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
-                    Intent Intent_UpdateSeekBar = new Intent();
-                    Intent_UpdateSeekBar.putExtra( "SeekBarMax", mediaplayer.getDuration() );
-                    Intent_UpdateSeekBar.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
-                    Intent_UpdateSeekBar.putExtra( TransportFlag.state, TransportFlag.SeekPrepare );
-                    Intent_UpdateSeekBar.setAction( TransportFlag.MainActivity );
+                    Log.e( "onPrepared", "onPreparedonPreparedonPrepared" );
+                    Intent Intent_SeekPrepare = new Intent( TransportFlag.MainActivity );
+                    Intent_SeekPrepare.putExtra( "SeekBarMax", mediaplayer.getDuration() );
+                    Intent_SeekPrepare.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
+                    Intent_SeekPrepare.putExtra( TransportFlag.state, TransportFlag.SeekPrepare );
+                    Log.e( "SeekBarMax", mediaplayer.getDuration() + "" );
+                    Log.e( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
                     //发送拖动条最大值和置0给Activity
-                    sendBroadcast( Intent_UpdateSeekBar );
+                    // sendBroadcast( Intent_SeekPrepare );
                 }
             } );
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Intent Intent_CurrentItem = new Intent();
-        Intent_CurrentItem.putExtra( TransportFlag.CurrentItem, mMusicList.get( ItemLocationIndex ) );
-        Intent_CurrentItem.putExtra( TransportFlag.state, TransportFlag.CurrentItem );
-        Intent_CurrentItem.setAction( TransportFlag.MainActivity );
+        Intent Intent_CurrentItem = new Intent( TransportFlag.MainActivity );
+        Intent_CurrentItem.putExtra( CurrentItem, mMusicList.get( ItemLocationIndex ) );
+        Log.e( "CurrentItem.Name", mMusicList.get( ItemLocationIndex ).getMusicName() );
+        Log.e( "CurrentItem.Path", mMusicList.get( ItemLocationIndex ).getMusicPath() );
+        Intent_CurrentItem.putExtra( TransportFlag.state, CurrentItem );
         //发送当前播放条目给Activity
         sendBroadcast( Intent_CurrentItem );
-        mHandlerSeekbar.post( mRunnablePlay  );
+        mHandlerSeekbar.post( mRunnablePlay );
     }
 
     /**
@@ -264,15 +270,14 @@ public class MusicService extends Service {
             int progress = intent.getIntExtra( "SeekTo", 0 );
             mode = intent.getIntExtra( "mode", 0 );
             state = intent.getStringExtra( TransportFlag.state );
-            Log.e( "state",state );
-//            if(state.equals( TransportFlag.PlayDefault )){
-//                playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
-//            }
+            Log.e( "state", state );
             switch (state) {
                 case TransportFlag.PlayDefault:                                 //接收默认播放曲目
                     playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
                     break;
                 case TransportFlag.PlayList:                                    //接收按列表播放
+                    Log.e( "ItemLocationIndex", ItemLocationIndex + "" );
+                    Log.e( "path", path );
                     playMusic( path );
                     break;
                 case TransportFlag.Play:                                        //接收媒体播放器播放
@@ -281,10 +286,10 @@ public class MusicService extends Service {
                 case TransportFlag.Pause:                                       //接收媒体播放器暂停
                     mediaplayer.pause();
                     break;
-                case TransportFlag.Last:                                        //接收下一首
+                case TransportFlag.Last:                                        //接收上一首
                     LastMusic();
                     break;
-                case TransportFlag.Next:                                        //接收上一首
+                case TransportFlag.Next:                                        //接收下一首
                     NextMusic();
                     break;
                 case TransportFlag.SeekTo:                                      //接收播放器跳转至
