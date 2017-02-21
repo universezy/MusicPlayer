@@ -36,7 +36,9 @@ import com.tencent.connect.share.QQShare;
 import com.tencent.tauth.Tencent;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity implements
         View.OnClickListener,
@@ -61,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements
     //列表视图
     public ListView mlvList;
     //拖动条
-    public SeekBar msbPlayer;
+    public static SeekBar msbPlayer;
     //抽屉布局
     public DrawerLayout mdlMain;
     //导航视图
@@ -106,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements
         isApplicationAlive = true;
 
         //注册接收器
-        IntentFilter intentFilter = new IntentFilter(TransportFlag.MainActivity);
+        IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
         registerReceiver( mainActivityReceiver, intentFilter );
 
         //启动后台Service
@@ -198,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements
                 case R.id.btnLast:          //上一首
                     Intent Intent_Last = new Intent( TransportFlag.MusicService );
                     Intent_Last.putExtra( TransportFlag.state, TransportFlag.Last );
-                   // sendBroadcast( Intent_Last );
+                    // sendBroadcast( Intent_Last );
                     break;
                 case R.id.btnNext:          //下一首
                     Log.e( "btnNext", "btnNext" );
@@ -274,10 +276,8 @@ public class MainActivity extends AppCompatActivity implements
             Intent Intent_onItemClick = new Intent( TransportFlag.MusicService );
             Intent_onItemClick.putExtra( "position", position );
             Intent_onItemClick.putExtra( "path", ((MusicBean) mlaList.getItem( position )).getMusicPath() );
-            Log.e( "position", position + "" );
-            Log.e( "path", ((MusicBean) mlaList.getItem( position )).getMusicPath() );
             Intent_onItemClick.putExtra( TransportFlag.state, TransportFlag.PlayList );
-            //Service播放选择条目
+            //Service播放选择条目     测试完毕
             sendBroadcast( Intent_onItemClick );
             mbtnPlay.setText( "PAUSE" );
         }
@@ -319,9 +319,8 @@ public class MainActivity extends AppCompatActivity implements
         Intent Intent_SeekTo = new Intent( TransportFlag.MusicService );
         Intent_SeekTo.putExtra( TransportFlag.SeekTo, seekBar.getProgress() );
         Intent_SeekTo.putExtra( TransportFlag.state, TransportFlag.SeekTo );
-        //Service控制播放器跳转至
-        //sendBroadcast( Intent_SeekTo );
-
+        //Service控制播放器跳转至       测试完毕
+        sendBroadcast( Intent_SeekTo );
     }
 
     /*****************************************************************************************
@@ -401,7 +400,7 @@ public class MainActivity extends AppCompatActivity implements
                         Intent Intent_PlayMode = new Intent( TransportFlag.MusicService );
                         Intent_PlayMode.putExtra( "mode", mode );
                         //将播放模式传给Service
-                       // sendBroadcast( Intent_PlayMode );
+                        // sendBroadcast( Intent_PlayMode );
                         dialog.dismiss();
                     }
                 } )
@@ -431,7 +430,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
         //Service播放或者暂停播放器
-       // sendBroadcast( Intent_PlayPause );
+        // sendBroadcast( Intent_PlayPause );
     }
 
     /**
@@ -598,24 +597,22 @@ public class MainActivity extends AppCompatActivity implements
             CurrentItem = intent.getParcelableExtra( TransportFlag.CurrentItem );
             Log.e( "state", state );
             switch (state) {
-                case TransportFlag.LoadMusic:                                       //接收加载音乐
+                case TransportFlag.LoadMusic:                                       //接收加载音乐    测试完毕
                     AsyncLoadMusic();
                     break;
-                case TransportFlag.SeekTo:                                          //接收移动拖动条至
+                case TransportFlag.SeekTo:                                          //接收移动拖动条至  测试完毕
                     msbPlayer.setProgress( SeekBarTo );
                     mtvCurrentProgress.setText( TextViewTo );
-                    Log.e( "SeekBarTo          --",SeekBarTo+"");
-                    Log.e( "TextViewTo           --", TextViewTo+ "" );
                     break;
-                case TransportFlag.NextItem:                                        //接收下一首
+                case TransportFlag.NextItem:                                        //接收下一首     测试完毕
                     Toast.makeText( getApplicationContext(), "Next: " + NextItem, Toast.LENGTH_SHORT ).show();
                     break;
-                case TransportFlag.SeekPrepare:                                     //接收播放准备
+                case TransportFlag.SeekPrepare:                                     //接收播放准备    测试完毕
                     msbPlayer.setMax( SeekBarMax );
                     mtvTotalProgress.setText( TextViewTo );
+                    mtvCurrentProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
                     break;
-                case TransportFlag.CurrentItem:                                     //接收当前条目
-                    Log.e( "CurrentItem", CurrentItem.getMusicName() );
+                case TransportFlag.CurrentItem:                                     //接收当前条目    测试完毕
                     mtvName.setText( CurrentItem.getMusicName() );
                 default:
                     break;
