@@ -106,8 +106,7 @@ public class MainActivity extends AppCompatActivity implements
         isApplicationAlive = true;
 
         //注册接收器
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction( TransportFlag.MainActivity );
+        IntentFilter intentFilter = new IntentFilter(TransportFlag.MainActivity);
         registerReceiver( mainActivityReceiver, intentFilter );
 
         //启动后台Service
@@ -199,13 +198,13 @@ public class MainActivity extends AppCompatActivity implements
                 case R.id.btnLast:          //上一首
                     Intent Intent_Last = new Intent( TransportFlag.MusicService );
                     Intent_Last.putExtra( TransportFlag.state, TransportFlag.Last );
-                    sendBroadcast( Intent_Last );
+                   // sendBroadcast( Intent_Last );
                     break;
                 case R.id.btnNext:          //下一首
                     Log.e( "btnNext", "btnNext" );
                     Intent Intent_Next = new Intent( TransportFlag.MusicService );
                     Intent_Next.putExtra( TransportFlag.state, TransportFlag.Next );
-                    sendBroadcast( Intent_Next );
+                    //sendBroadcast( Intent_Next );
                     break;
                 case R.id.btnPlay:          //播放
                     Play_Pause();
@@ -321,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements
         Intent_SeekTo.putExtra( TransportFlag.SeekTo, seekBar.getProgress() );
         Intent_SeekTo.putExtra( TransportFlag.state, TransportFlag.SeekTo );
         //Service控制播放器跳转至
-        sendBroadcast( Intent_SeekTo );
+        //sendBroadcast( Intent_SeekTo );
 
     }
 
@@ -402,7 +401,7 @@ public class MainActivity extends AppCompatActivity implements
                         Intent Intent_PlayMode = new Intent( TransportFlag.MusicService );
                         Intent_PlayMode.putExtra( "mode", mode );
                         //将播放模式传给Service
-                        sendBroadcast( Intent_PlayMode );
+                       // sendBroadcast( Intent_PlayMode );
                         dialog.dismiss();
                     }
                 } )
@@ -432,7 +431,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
         //Service播放或者暂停播放器
-        sendBroadcast( Intent_PlayPause );
+       // sendBroadcast( Intent_PlayPause );
     }
 
     /**
@@ -596,7 +595,7 @@ public class MainActivity extends AppCompatActivity implements
             String TextViewTo = intent.getStringExtra( "TextViewTo" );
             String NextItem = intent.getStringExtra( TransportFlag.NextItem );
             state = intent.getStringExtra( TransportFlag.state );
-            //  CurrentItem = intent.getParcelableExtra( TransportFlag.CurrentItem );
+            CurrentItem = intent.getParcelableExtra( TransportFlag.CurrentItem );
             Log.e( "state", state );
             switch (state) {
                 case TransportFlag.LoadMusic:                                       //接收加载音乐

@@ -54,8 +54,7 @@ public class MusicService extends Service {
         super.onCreate();
 
         //注册接收器
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction( TransportFlag.MusicService );
+        IntentFilter intentFilter = new IntentFilter(TransportFlag.MusicService);
         registerReceiver( musicServiceReceiver, intentFilter );
 
         //设置播放线程
@@ -80,7 +79,7 @@ public class MusicService extends Service {
                     Intent_UpdateSeekBar.putExtra( TransportFlag.SeekTo, TransportFlag.SeekTo );
                     Log.e( "SeekBarTo", mediaplayer.getCurrentPosition() + "" );
                     Log.e( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
-                    sendBroadcast( Intent_UpdateSeekBar );
+                    //sendBroadcast( Intent_UpdateSeekBar );
                     //mHandlerSeekbar.postDelayed( mRunnableSeekbar, 1000 );
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
@@ -222,7 +221,7 @@ public class MusicService extends Service {
                     Intent_NextItem.putExtra( TransportFlag.NextItem, mMusicList.get( ItemLocationIndex ).getMusicName() );
                     Intent_NextItem.putExtra( TransportFlag.state, TransportFlag.NextItem );
                     //发送下一首给Activity用于Toast
-                    sendBroadcast( Intent_NextItem );
+                   // sendBroadcast( Intent_NextItem );
                     try {
                         Thread.sleep( 3000 );
                     } catch (InterruptedException e) {
@@ -254,7 +253,7 @@ public class MusicService extends Service {
         Log.e( "CurrentItem.Path", mMusicList.get( ItemLocationIndex ).getMusicPath() );
         Intent_CurrentItem.putExtra( TransportFlag.state, CurrentItem );
         //发送当前播放条目给Activity
-        sendBroadcast( Intent_CurrentItem );
+       // sendBroadcast( Intent_CurrentItem );
         mHandlerSeekbar.post( mRunnablePlay );
     }
 
