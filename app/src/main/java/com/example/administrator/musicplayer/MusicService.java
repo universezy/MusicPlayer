@@ -140,7 +140,8 @@ public class MusicService extends Service {
                 MusicBean music;
                 if ((path = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.DATA ) )).endsWith( ".mp3" )) {
                     music = new MusicBean();
-                    music.setMusicName( cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.TITLE ) ) );
+                    music.setMusicName( cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.TITLE ) ).replaceAll("(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "")
+                            .replaceAll( ".mp3","" ) );
                     music.setMusicPath( path );
                     mMusicList.add( music );
                 }

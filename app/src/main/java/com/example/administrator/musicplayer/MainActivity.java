@@ -115,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements
         startService( ServiceIntent );
 
         InitLayout();
-
     }
 
     @Override
@@ -550,7 +549,9 @@ public class MainActivity extends AppCompatActivity implements
                     params.putInt( QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT );
                     params.putString( QQShare.SHARE_TO_QQ_TITLE, "Share music to friend" );
                     params.putString( QQShare.SHARE_TO_QQ_SUMMARY, mtvName.getText().toString() );
-                    params.putString( QQShare.SHARE_TO_QQ_TARGET_URL, "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" + mtvName.getText().toString() );
+                    params.putString( QQShare.SHARE_TO_QQ_TARGET_URL,
+                            "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" + mtvName.getText().toString()
+                                    .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ) );
                     params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
                     params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
                     mTencent.shareToQQ( this, params, new ShareListener() );
