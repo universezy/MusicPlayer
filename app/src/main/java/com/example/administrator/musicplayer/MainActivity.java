@@ -234,11 +234,11 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.nav_setToRingtone) {             //设为铃声                  已实现
+        if (id == R.id.nav_setToRingtone) {             //设为铃声
             setMusicTo( RingtoneManager.TYPE_RINGTONE );
-        } else if (id == R.id.nav_setToNotification) {  //设为提示音                已实现
+        } else if (id == R.id.nav_setToNotification) {  //设为提示音
             setMusicTo( RingtoneManager.TYPE_RINGTONE );
-        } else if (id == R.id.nav_setToAlarm) {         //设为闹钟                  已实现
+        } else if (id == R.id.nav_setToAlarm) {         //设为闹钟
             setMusicTo( RingtoneManager.TYPE_RINGTONE );
         } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送
             MessageToUser();
@@ -510,7 +510,6 @@ public class MainActivity extends AppCompatActivity implements
                 getContentResolver().update( uri, values, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()} );
                 newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
             }
-
             RingtoneManager.setActualDefaultRingtoneUri( this, ringType, newUri );
 
             new AlertDialog.Builder( this )
