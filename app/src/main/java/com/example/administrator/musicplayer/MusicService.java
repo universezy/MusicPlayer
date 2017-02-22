@@ -24,13 +24,13 @@ import static com.example.administrator.musicplayer.TransportFlag.CurrentItem;
 
 public class MusicService extends Service {
     public IBinder mBinder;      // interface for clients that bind
-    boolean mAllowRebind; // indicates whether onRebind should be used
+    boolean mAllowRebind;       // indicates whether onRebind should be used
 
     //媒体播放器
     public MediaPlayer mediaplayer = new MediaPlayer();
     //播放列表
-    public static ArrayList<MusicBean> mMusicList = new ArrayList<>();
-    //播放列表索引，初始化为第一首
+    public ArrayList<MusicBean> mMusicList = new ArrayList<>();
+    //播放列表索引
     public int ItemLocationIndex;
     //播放顺序数组
     public int[] PlayArray;
@@ -79,7 +79,7 @@ public class MusicService extends Service {
                     Intent_UpdateSeekBar.putExtra( TransportFlag.state, TransportFlag.SeekTo );
                     //更新拖动条信息给Activity      测试完毕
                     sendBroadcast( Intent_UpdateSeekBar );
-                    mHandlerSeekbar.postDelayed( mRunnableSeekbar, 1000 );      //测试完毕
+                    mHandlerSeekbar.postDelayed( mRunnableSeekbar, 1000 );
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -120,14 +120,13 @@ public class MusicService extends Service {
         unregisterReceiver( musicServiceReceiver );
     }
 
-
     /**
      * 载入歌曲
      **/
     public void LoadMusic() {
         mMusicList.clear();
         //利用游标查找媒体数据库中的音乐文件
-        Cursor cursor = this.getContentResolver().query(
+        Cursor cursor = MusicService.this.getContentResolver().query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null,
                 MediaStore.Audio.Media.DATA + " like ?",
                 new String[]{Environment.getExternalStorageDirectory() + File.separator + "%"},
@@ -147,25 +146,30 @@ public class MusicService extends Service {
                 }
             }
             cursor.close();
-            //设置默认的播放顺序为顺序播放
-            PlayArray = new int[mMusicList.size()];
-            for (int i = 0; i < PlayArray.length; i++) {
-                PlayArray[i] = i;
-            }
-            Intent Intent_SendMusicList = new Intent( TransportFlag.MainActivity );
-            Intent_SendMusicList.putParcelableArrayListExtra( "mMusicList", mMusicList );
-            Intent_SendMusicList.putExtra( TransportFlag.state, TransportFlag.LoadMusic );
-            //将播放列表发给Acticity用于装载ListView       测试完毕
-            sendBroadcast( Intent_SendMusicList );
+
+            ModeSetting( mode );
+            sendMusicList( mMusicList );
         }
+    }
+
+    /**
+     * 发送列表给Service
+     **/
+    public void sendMusicList(ArrayList<MusicBean> MusicList) {
+        Intent Intent_SendMusicList = new Intent( TransportFlag.MainActivity );
+        Intent_SendMusicList.putParcelableArrayListExtra( "mMusicList", MusicList );
+        Intent_SendMusicList.putExtra( TransportFlag.state, TransportFlag.LoadMusic );
+        //将播放列表发给Service        测试完毕
+        sendBroadcast( Intent_SendMusicList );
     }
 
     /**
      * 上一首
      **/
     public void LastMusic() {
-        ItemLocationIndex--;
-        ItemLocationIndex = (ItemLocationIndex + mMusicList.size()) % mMusicList.size();
+        PlayArrayIndex--;
+        PlayArrayIndex = (PlayArrayIndex + mMusicList.size()) % mMusicList.size();
+        ItemLocationIndex = PlayArray[PlayArrayIndex];
         mediaplayer.stop();
         playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
     }
@@ -174,9 +178,9 @@ public class MusicService extends Service {
      * 下一首
      **/
     public void NextMusic() {
-        Log.e( "Next", "Next ++++++" );
-        ItemLocationIndex++;
-        ItemLocationIndex = ItemLocationIndex % mMusicList.size();
+        PlayArrayIndex++;
+        PlayArrayIndex = PlayArrayIndex % mMusicList.size();
+        ItemLocationIndex = PlayArray[PlayArrayIndex];
         mediaplayer.stop();
         playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
     }
@@ -185,83 +189,87 @@ public class MusicService extends Service {
      * 播放音乐
      **/
     public void playMusic(String path) {
-        Log.e( "PlayArrayIndex 111", PlayArrayIndex + "=========================" );
-        Log.e( "Next item 111", ItemLocationIndex + "=========================" );
-        try {
-            Log.e( "PlayArrayIndex 222", PlayArrayIndex + "=========================" );
-            Log.e( "Next item 222", ItemLocationIndex + "=========================" );
-            mediaplayer.reset();
-            mediaplayer.setDataSource( path );
-            mediaplayer.setAudioStreamType( AudioManager.STREAM_MUSIC );
-            mediaplayer.prepare();
-            mediaplayer.setOnCompletionListener( new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    Log.e( "Mode", mode + "" );
-                    switch (mode) {
-                        case TransportFlag.OrderPlay:
-                            Log.e( "PlayArrayIndex 333", PlayArrayIndex + "=========================" );
-                            Log.e( "Next item 333", ItemLocationIndex + "=========================" );
-                            break;
-                        case TransportFlag.SinglePlay:
-                            for (int i = 0; i < PlayArray.length; i++) {
-                                PlayArray[i] = ItemLocationIndex;
+        if (path != null) {
+            mHandlerSeekbar.removeCallbacks( mRunnableSeekbar );
+            try {
+                mediaplayer.reset();
+                mediaplayer.setDataSource( path );
+                mediaplayer.setAudioStreamType( AudioManager.STREAM_MUSIC );
+                mediaplayer.prepare();
+                mediaplayer.setOnCompletionListener( new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        PlayArrayIndex++;
+                        PlayArrayIndex = PlayArrayIndex % mMusicList.size();
+                        ItemLocationIndex = PlayArray[PlayArrayIndex];
+
+                        Intent Intent_NextItem = new Intent( TransportFlag.MainActivity );
+                        Intent_NextItem.putExtra( TransportFlag.NextItem, mMusicList.get( ItemLocationIndex ).getMusicName() );
+                        Intent_NextItem.putExtra( TransportFlag.state, TransportFlag.NextItem );
+                        //发送下一首给Activity用于Toast     测试完毕
+                        sendBroadcast( Intent_NextItem );
+                        mHandlerSeekbar.postDelayed( new Runnable() {
+                            @Override
+                            public void run() {
+                                playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
                             }
-                            break;
-                        case TransportFlag.RandomPlay:
-                            int temp;
-                            //生成随机播放列表
-                            Random random = new Random();
-                            for (int i = 0; i < PlayArray.length; i++) {
-                                int j = random.nextInt( PlayArray.length );
-                                temp = PlayArray[i];
-                                PlayArray[i] = PlayArray[j];
-                                PlayArray[j] = temp;
-                            }
-                            break;
-                        default:
-                            break;
+                        }, 3000 );
                     }
-                    Log.e( "PlayArrayIndex 444", PlayArrayIndex + "=========================" );
-                    Log.e( "Next item 444", ItemLocationIndex + "=========================" );
-                    PlayArrayIndex++;
-                    PlayArrayIndex = PlayArrayIndex % mMusicList.size();
-                    ItemLocationIndex = PlayArray[PlayArrayIndex];
-                    Log.e( "PlayArrayIndex", PlayArrayIndex + "=========================" );
-                    Log.e( "Next item", ItemLocationIndex + "=========================" );
-                    Intent Intent_NextItem = new Intent( TransportFlag.MainActivity );
-                    Intent_NextItem.putExtra( TransportFlag.NextItem, mMusicList.get( ItemLocationIndex ).getMusicName() );
-                    Intent_NextItem.putExtra( TransportFlag.state, TransportFlag.NextItem );
-                    //发送下一首给Activity用于Toast     测试完毕
-                    sendBroadcast( Intent_NextItem );
-                    mHandlerSeekbar.postDelayed( new Runnable() {
-                        @Override
-                        public void run() {
-                            playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
-                        }
-                    }, 3000 );
-                }
-            } );
-            mediaplayer.setOnPreparedListener( new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    Intent Intent_SeekPrepare = new Intent( TransportFlag.MainActivity );
-                    Intent_SeekPrepare.putExtra( "SeekBarMax", mediaplayer.getDuration() );
-                    Intent_SeekPrepare.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getDuration() ) ) );
-                    Intent_SeekPrepare.putExtra( TransportFlag.state, TransportFlag.SeekPrepare );
-                    //发送拖动条最大值和置0给Activity      测试完毕
-                    sendBroadcast( Intent_SeekPrepare );
-                }
-            } );
-        } catch (Exception e) {
-            e.printStackTrace();
+                } );
+                mediaplayer.setOnPreparedListener( new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mp) {
+                        Intent Intent_SeekPrepare = new Intent( TransportFlag.MainActivity );
+                        Intent_SeekPrepare.putExtra( "SeekBarMax", mediaplayer.getDuration() );
+                        Intent_SeekPrepare.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getDuration() ) ) );
+                        Intent_SeekPrepare.putExtra( TransportFlag.state, TransportFlag.SeekPrepare );
+                        //发送拖动条最大值和置0给Activity      测试完毕
+                        sendBroadcast( Intent_SeekPrepare );
+                    }
+                } );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Intent Intent_CurrentItem = new Intent( TransportFlag.MainActivity );
+            Intent_CurrentItem.putExtra( CurrentItem, mMusicList.get( ItemLocationIndex ) );
+            Intent_CurrentItem.putExtra( TransportFlag.state, CurrentItem );
+            //发送当前播放条目给Activity     测试完毕
+            sendBroadcast( Intent_CurrentItem );
+            mHandlerPlay.post( mRunnablePlay );
         }
-        Intent Intent_CurrentItem = new Intent( TransportFlag.MainActivity );
-        Intent_CurrentItem.putExtra( CurrentItem, mMusicList.get( ItemLocationIndex ) );
-        Intent_CurrentItem.putExtra( TransportFlag.state, CurrentItem );
-        //发送当前播放条目给Activity     测试完毕
-        sendBroadcast( Intent_CurrentItem );
-        mHandlerPlay.post( mRunnablePlay );
+    }
+
+    /**
+     * 播放模式设置
+     **/
+    public void ModeSetting(int mode) {
+        PlayArray = new int[mMusicList.size()];
+        switch (mode) {
+            case TransportFlag.OrderPlay:
+                for (int i = 0; i < PlayArray.length; i++) {
+                    PlayArray[i] = i;
+                }
+                break;
+            case TransportFlag.SinglePlay:
+                for (int i = 0; i < PlayArray.length; i++) {
+                    PlayArray[i] = ItemLocationIndex;
+                }
+                break;
+            case TransportFlag.RandomPlay:
+                ModeSetting( TransportFlag.OrderPlay );
+                int temp;
+                //生成随机播放列表
+                Random random = new Random();
+                for (int i = 0; i < PlayArray.length; i++) {
+                    int j = random.nextInt( PlayArray.length );
+                    temp = PlayArray[i];
+                    PlayArray[i] = PlayArray[j];
+                    PlayArray[j] = temp;
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     /**
@@ -270,39 +278,46 @@ public class MusicService extends Service {
     class MusicServiceReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            ItemLocationIndex = intent.getIntExtra( "position", 0 );
-            PlayArrayIndex = intent.getIntExtra( "position", 0 );
-            String path = intent.getStringExtra( "path" );
-            int progress = intent.getIntExtra( TransportFlag.SeekTo, 0 );
-            mode = intent.getIntExtra( "mode", 0 );
+            String path;
+            int progress;
             state = intent.getStringExtra( TransportFlag.state );
             Log.e( "state", state );
             switch (state) {
-                case TransportFlag.PlayDefault:                                 //接收默认播放曲目
+                case TransportFlag.LoadMusic:                                   //接收加载音乐           测试完毕
+                    mMusicList = (ArrayList) (intent.getParcelableArrayListExtra( "mMusicList" ));
+                    ModeSetting( mode );
+                    break;
+                case TransportFlag.PlayDefault:                                 //接收默认播放曲目       测试完毕
                     playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
                     break;
-                case TransportFlag.PlayList:                                    //接收按列表播放   测试完毕
-                    Log.e( "ItemLocationIndex", ItemLocationIndex + " ;;;;;;;;;;;;;;;;" );
-                    Log.e( "PlayArrayIndex", PlayArrayIndex + " ;;;;;;;;;;;;;;;;" );
+                case TransportFlag.PlayList:                                    //接收按列表播放         测试完毕
+                    ItemLocationIndex = intent.getIntExtra( "position", ItemLocationIndex );
+                    PlayArrayIndex = intent.getIntExtra( "position", PlayArrayIndex );
+                    path = intent.getStringExtra( "path" );
                     playMusic( path );
                     break;
-                case TransportFlag.Play:                                        //接收媒体播放器播放
+                case TransportFlag.Play:                                        //接收媒体播放器播放     测试完毕
                     mediaplayer.start();
                     break;
-                case TransportFlag.Pause:                                       //接收媒体播放器暂停
+                case TransportFlag.Pause:                                       //接收媒体播放器暂停     测试完毕
                     mediaplayer.pause();
                     break;
-                case TransportFlag.Last:                                        //接收上一首
+                case TransportFlag.Last:                                        //接收上一首             测试完毕
                     LastMusic();
                     break;
-                case TransportFlag.Next:                                        //接收下一首
+                case TransportFlag.Next:                                        //接收下一首             测试完毕
                     NextMusic();
                     break;
-                case TransportFlag.SeekTo:                                      //接收播放器跳转至      测试完毕
+                case TransportFlag.SeekTo:                                      //接收播放器跳转至       测试完毕
+                    progress = intent.getIntExtra( TransportFlag.SeekTo, 0 );
                     mediaplayer.seekTo( progress );
                     break;
-                case TransportFlag.Exit:                                        //接收退出信号
-                    MusicService.this.onDestroy();
+                case TransportFlag.Mode:                                        //接收播放器模式设置     测试完毕
+                    mode = intent.getIntExtra( TransportFlag.Mode, 0 );
+                    ModeSetting( mode );
+                    break;
+                case TransportFlag.Exit:                                        //接收退出信号           测试完毕
+                    MusicService.this.stopSelf();
                 default:
                     break;
             }

@@ -16,6 +16,7 @@ public class TransportFlag {
     public static final String NextItem = "NextItem";
     public static final String Exit = "Exit";
     public static final String CurrentItem = "CurrentItem";
+    public static final String Mode = "Mode";
 
     public static final int OrderPlay = 0;
     public static final int SinglePlay = 1;
