@@ -251,8 +251,6 @@ public class MainActivity extends AppCompatActivity implements
         } else if (id == R.id.nav_shareByWechat) {      //通过微信分享
             //ShareMusicTo(ShareByWechat);
             MessageToUser();
-        } else if (id == R.id.nav_minimize) {            //最小化到后台播放
-            PlayInBackground();
         } else if (id == R.id.nav_version) {             //版本号                   已实现
             ShowVersion();
         } else if (id == R.id.nav_exit) {               //退出应用                  已实现
@@ -551,7 +549,7 @@ public class MainActivity extends AppCompatActivity implements
                     params.putString( QQShare.SHARE_TO_QQ_SUMMARY, mtvName.getText().toString() );
                     params.putString( QQShare.SHARE_TO_QQ_TARGET_URL,
                             "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" + mtvName.getText().toString()
-                                    .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ) );
+                                    .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ).replaceAll( " ","%20" ) );
                     params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
                     params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
                     mTencent.shareToQQ( this, params, new ShareListener() );
@@ -563,13 +561,6 @@ public class MainActivity extends AppCompatActivity implements
                     break;
             }
         }
-    }
-
-    /**
-     * 后台播放
-     **/
-    public void PlayInBackground() {
-
     }
 
     /**

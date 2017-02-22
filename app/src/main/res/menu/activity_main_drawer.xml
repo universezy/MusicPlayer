@@ -44,10 +44,6 @@
     </item>
     <group android:checkableBehavior="none">
         <item
-            android:id="@+id/nav_minimize"
-            android:icon="@drawable/ic_menu_settings"
-            android:title="Minimize" />
-        <item
             android:id="@+id/nav_version"
             android:icon="@drawable/ic_menu_settings"
             android:title="Version" />
