@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Binder;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -23,7 +24,6 @@ import java.util.Random;
 import static com.example.administrator.musicplayer.TransportFlag.CurrentItem;
 
 public class MusicService extends Service {
-    public IBinder mBinder;      // interface for clients that bind
     boolean mAllowRebind;       // indicates whether onRebind should be used
 
     //媒体播放器
@@ -45,7 +45,7 @@ public class MusicService extends Service {
     //拖动条线程
     public Runnable RunnableSeekbar;
     //接收器
-    MusicServiceReceiver musicServiceReceiver = new MusicServiceReceiver();
+    public MusicServiceReceiver musicServiceReceiver = new MusicServiceReceiver();
     //服务状态
     public String state;
     //播放模式序号
@@ -98,7 +98,7 @@ public class MusicService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return mBinder;
+        return new ServiceBinder();
     }
 
     @Override
@@ -140,8 +140,8 @@ public class MusicService extends Service {
                 MusicBean music;
                 if ((path = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.DATA ) )).endsWith( ".mp3" )) {
                     music = new MusicBean();
-                    music.setMusicName( cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.TITLE ) ).replaceAll("(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "")
-                            .replaceAll( ".mp3","" ) );
+                    music.setMusicName( cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.TITLE ) ).replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
+                            .replaceAll( ".mp3", "" ) );
                     music.setMusicPath( path );
                     mMusicList.add( music );
                 }
@@ -323,5 +323,11 @@ public class MusicService extends Service {
                     break;
             }
         }
+    }
+
+    /**
+     * 绑定类
+     **/
+    public class ServiceBinder extends Binder {
     }
 }

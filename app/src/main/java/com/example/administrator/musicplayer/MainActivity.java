@@ -1,18 +1,21 @@
 package com.example.administrator.musicplayer;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -72,6 +75,9 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 工具实例
      **/
+
+    //绑定对象
+    public MusicService.ServiceBinder binder;
     //列表管理器
     private Handler HandlerList = new Handler();
     //列表适配器
@@ -113,9 +119,8 @@ public class MainActivity extends AppCompatActivity implements
         IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
         registerReceiver( mainActivityReceiver, intentFilter );
 
-        //启动后台Service
-        Intent ServiceIntent = new Intent( this, MusicService.class );
-        startService( ServiceIntent );
+        Intent intent = new Intent( this, MusicService.class );
+        bindService( intent, serviceConnection, Context.BIND_AUTO_CREATE );
 
         InitLayout();
     }
@@ -130,6 +135,17 @@ public class MainActivity extends AppCompatActivity implements
     protected void onDestroy() {
         super.onDestroy();
     }
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            binder = (MusicService.ServiceBinder) service;  //获取其实例
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+        }
+    };
 
     /**
      * 初始化布局
@@ -250,12 +266,12 @@ public class MainActivity extends AppCompatActivity implements
             MessageToUser();
         } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送
             MessageToUser();
-            //SendMusicTo();
+            //SendMusicTo(SendByQQ);
         } else if (id == R.id.nav_sendByBluetooth) {    //通过蓝牙发送
             MessageToUser();
-            //SendMusicTo();
+            //SendMusicTo(SendByBluetooth);
         } else if (id == R.id.nav_setToRingtone) {       //设为铃声              已实现
-            setRingtone();
+            SetRingtone();
         } else if (id == R.id.nav_version) {             //版本号                已实现
             ShowVersion();
         } else if (id == R.id.nav_exit) {               //退出应用              已实现
@@ -403,7 +419,7 @@ public class MainActivity extends AppCompatActivity implements
      * 播放模式设定
      **/
     public void setPlayMode() {
-        if (mMusicList == null || mMusicList.size() == 0){
+        if (mMusicList == null || mMusicList.size() == 0) {
             Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
             return;
         }
@@ -533,7 +549,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 设置铃声
      **/
-    public void setRingtone() {
+    public void SetRingtone() {
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
         } else {
@@ -601,6 +617,7 @@ public class MainActivity extends AppCompatActivity implements
         //发送退出信号给Service        测试完毕
         sendBroadcast( Intent_Exit );
         unregisterReceiver( mainActivityReceiver );
+        unbindService( serviceConnection );
         MainActivity.this.finish();
     }
 
@@ -615,7 +632,7 @@ public class MainActivity extends AppCompatActivity implements
             state = intent.getStringExtra( TransportFlag.state );
             Log.e( "state", state );
             switch (state) {
-                case TransportFlag.LoadMusic:                                       //接收加载音乐
+                case TransportFlag.LoadMusic:                                       //接收加载音乐       测试完毕
                     mMusicList = (ArrayList) (intent.getParcelableArrayListExtra( "mMusicList" ));
                     LoadMusic();
                     break;
