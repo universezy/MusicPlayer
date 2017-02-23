@@ -48,6 +48,12 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
         </activity>
 
+        <activity
+            android:name=".wxapi.WXEntryActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+        </activity>
+
         <service
             android:name="com.example.administrator.musicplayer.MusicService"
             android:enabled="true"/>

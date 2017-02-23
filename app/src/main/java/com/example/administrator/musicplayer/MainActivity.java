@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -37,10 +38,7 @@ import android.widget.Toast;
 
 import com.tencent.connect.share.QQShare;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
-import com.tencent.mm.opensdk.modelmsg.WXMediaMessage;
-import com.tencent.mm.opensdk.modelmsg.WXWebpageObject;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
-import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 import com.tencent.tauth.Tencent;
 
 import java.io.File;
@@ -91,6 +89,8 @@ public class MainActivity extends AppCompatActivity implements
     protected Tencent tencent;
     //微信API
     protected IWXAPI iwxapi;
+
+    public WeChatShareUtil weChatShareUtil;
     //接收器
     MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
 
@@ -528,27 +528,31 @@ public class MainActivity extends AppCompatActivity implements
                     if (mtvName.getText().equals( "Music Name" )) {
                         Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
                     } else {
-                        iwxapi = WXAPIFactory.createWXAPI( this, String.valueOf( R.string.APP_ID_WX ), true );
-                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
-                        if (!iwxapi.isWXAppInstalled()) {
-                            Toast.makeText( this, "You haven't install Wechat",
-                                    Toast.LENGTH_SHORT ).show();
-                            return;
+
+
+//                        iwxapi = WXAPIFactory.createWXAPI( this, String.valueOf( R.string.APP_ID_WX ), true );
+//                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
+//                        if (!iwxapi.isWXAppInstalled()) {
+//                            Toast.makeText( this, "You haven't install Wechat",
+//                                    Toast.LENGTH_SHORT ).show();
+//                            return;
+//                        }
+//                        WXWebpageObject webpageObject = new WXWebpageObject();
+//                        webpageObject.webpageUrl = strUrl;
+//                        WXMediaMessage msg = new WXMediaMessage(webpageObject);
+//                        msg.title = "title";
+//                        msg.description = "description";
+//                        SendMessageToWX.Req req = new SendMessageToWX.Req();
+//                        req.transaction = String.valueOf( System.currentTimeMillis() );
+//                        req.message = msg;
+//                        req.scene = SendMessageToWX.Req.WXSceneSession;
+//                        iwxapi.sendReq( req );
+                        weChatShareUtil = WeChatShareUtil.getInstance(this);
+                        boolean result = false;
+                        result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
+                        if (!result) {
+                            Toast.makeText(MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT).show();
                         }
-                        WXWebpageObject webpageObject = new WXWebpageObject();
-                        webpageObject.webpageUrl = strUrl;
-                        Log.e( "strUrl", strUrl );
-                        WXMediaMessage msg = new WXMediaMessage(webpageObject);
-                        msg.title = "title";
-                        msg.description = "description";
-                        Log.e( "msg.description", msg.description );
-                        SendMessageToWX.Req req = new SendMessageToWX.Req();
-                        req.transaction = String.valueOf( System.currentTimeMillis() );
-                        Log.e( "req.transaction ", req.transaction );
-                        req.message = msg;
-                        req.scene = SendMessageToWX.Req.WXSceneSession;
-                        Log.e( "WXSceneSession", SendMessageToWX.Req.WXSceneSession + "" );
-                        iwxapi.sendReq( req );
                     }
                     break;
                 default:
