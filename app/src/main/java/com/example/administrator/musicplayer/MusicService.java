@@ -27,27 +27,27 @@ public class MusicService extends Service {
     boolean mAllowRebind;       // indicates whether onRebind should be used
 
     //媒体播放器
-    public MediaPlayer mediaplayer = new MediaPlayer();
+    private MediaPlayer mediaplayer = new MediaPlayer();
     //播放列表
     public ArrayList<MusicBean> mMusicList = new ArrayList<>();
     //播放列表索引
     public int ItemLocationIndex;
     //播放顺序数组
-    public int[] PlayArray;
+    private int[] PlayArray;
     //播放顺序数组索引
-    public int PlayArrayIndex;
+    private int PlayArrayIndex;
     //播放管理器
-    public Handler HandlerPlay = new Handler();
+    private Handler HandlerPlay = new Handler();
     //拖动条管理器
-    public Handler HandlerSeekbar = new Handler();
+    private Handler HandlerSeekbar = new Handler();
     //播放线程
-    public Runnable RunnablePlay;
+    private Runnable RunnablePlay;
     //拖动条线程
-    public Runnable RunnableSeekbar;
+    private Runnable RunnableSeekbar;
     //接收器
-    public MusicServiceReceiver musicServiceReceiver = new MusicServiceReceiver();
+    protected MusicServiceReceiver musicServiceReceiver = new MusicServiceReceiver();
     //服务状态
-    public String state;
+    private String state;
     //播放模式序号
     private int mode;
 

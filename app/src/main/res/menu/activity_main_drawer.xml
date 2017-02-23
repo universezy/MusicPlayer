@@ -34,6 +34,10 @@
                 android:icon="@drawable/ic_menu_send"
                 android:title="QQ" />
             <item
+                android:id="@+id/nav_sendByWechat"
+                android:icon="@drawable/ic_menu_send"
+                android:title="Wechat" />
+            <item
                 android:id="@+id/nav_sendByBluetooth"
                 android:icon="@drawable/ic_menu_send"
                 android:title="Bluetooth" />

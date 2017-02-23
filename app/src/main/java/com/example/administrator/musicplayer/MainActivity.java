@@ -11,7 +11,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,7 +37,10 @@ import android.widget.Toast;
 
 import com.tencent.connect.share.QQShare;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
+import com.tencent.mm.opensdk.modelmsg.WXMediaMessage;
+import com.tencent.mm.opensdk.modelmsg.WXWebpageObject;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
+import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 import com.tencent.tauth.Tencent;
 
 import java.io.File;
@@ -61,57 +63,55 @@ public class MainActivity extends AppCompatActivity implements
      * 布局组件
      **/
     //按钮
-    public Button mbtnMore, mbtnMode, mbtnLast, mbtnNext, mbtnPlay;
+    private Button mbtnMore, mbtnMode, mbtnLast, mbtnNext, mbtnPlay;
     //搜索视图
-    public SearchView searchView;
+    private SearchView searchView;
     //文本视图
-    public TextView mtvName, mtvCurrentProgress, mtvTotalProgress;
+    private TextView mtvName, mtvCurrentProgress, mtvTotalProgress;
     //列表视图
-    public ListView listView;
+    private ListView listView;
     //拖动条
-    public SeekBar seekBar;
+    private SeekBar seekBar;
     //抽屉布局
-    public DrawerLayout drawerLayout;
+    private DrawerLayout drawerLayout;
     //导航视图
-    public NavigationView navigationView;
+    private NavigationView navigationView;
 
     /**
      * 工具实例
      **/
-
     //绑定对象
-    public MusicService.ServiceBinder binder;
+    protected MusicService.ServiceBinder binder;
     //列表管理器
     private Handler HandlerList = new Handler();
     //列表适配器
-    public ListAdapter listAdapter;
+    private ListAdapter listAdapter;
     //QQAPI
     protected Tencent tencent;
     //微信API
     protected IWXAPI iwxapi;
-
-    public WeChatShareUtil weChatShareUtil;
+    //分享工具类
+    //public WeChatShareUtil weChatShareUtil;
     //接收器
-    MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
+    protected MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
 
     /**
      * 自定义元素
      **/
     //播放列表
-    public ArrayList<MusicBean> mMusicList = new ArrayList<>();
+    private ArrayList<MusicBean> mMusicList = new ArrayList<>();
     //搜索列表
-    public ArrayList<MusicBean> mSearchList = new ArrayList<>();
+    private ArrayList<MusicBean> mSearchList = new ArrayList<>();
     //当前播放条目
-    public MusicBean CurrentItem;
+    private MusicBean CurrentItem;
     //服务状态
-    public String state;
+    private String state;
     //播放模式序号
     private int Mode = 0, mode = 0;
     //分享类型
-    final int ShareByQQ = 0, ShareByWechat = 1;
+    final static int ShareByQQ = 0, ShareByWechat = 1;
     //发送类型
-    final int SendByQQ = 0, SendByBluetooth = 1;
-
+    final static int SendByQQ = 0, SendByWechat = 2, SendByBluetooth = 2;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -270,17 +270,20 @@ public class MainActivity extends AppCompatActivity implements
         if (id == R.id.nav_shareByQQ) {                 //通过QQ分享            已实现
             ShareMusicTo( ShareByQQ );
         } else if (id == R.id.nav_shareByWechat) {      //通过微信分享
-            ShareMusicTo( ShareByWechat );
-            //MessageToUser();
+            //ShareMusicTo( ShareByWechat );
+            MessageToUser();
         } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送
             MessageToUser();
             //SendMusicTo(SendByQQ);
+        } else if (id == R.id.nav_sendByWechat) {       //通过微信发送
+            MessageToUser();
+            //SendMusicTo(SendByWechat);
         } else if (id == R.id.nav_sendByBluetooth) {    //通过蓝牙发送
             MessageToUser();
             //SendMusicTo(SendByBluetooth);
-        } else if (id == R.id.nav_setToRingtone) {       //设为铃声              已实现
+        } else if (id == R.id.nav_setToRingtone) {      //设为铃声              已实现
             SetRingtone();
-        } else if (id == R.id.nav_version) {             //版本号                已实现
+        } else if (id == R.id.nav_version) {            //版本号                已实现
             ShowVersion();
         } else if (id == R.id.nav_exit) {               //退出应用              已实现
             Exit();
@@ -528,31 +531,29 @@ public class MainActivity extends AppCompatActivity implements
                     if (mtvName.getText().equals( "Music Name" )) {
                         Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
                     } else {
-
-
-//                        iwxapi = WXAPIFactory.createWXAPI( this, String.valueOf( R.string.APP_ID_WX ), true );
-//                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
-//                        if (!iwxapi.isWXAppInstalled()) {
-//                            Toast.makeText( this, "You haven't install Wechat",
-//                                    Toast.LENGTH_SHORT ).show();
-//                            return;
-//                        }
-//                        WXWebpageObject webpageObject = new WXWebpageObject();
-//                        webpageObject.webpageUrl = strUrl;
-//                        WXMediaMessage msg = new WXMediaMessage(webpageObject);
-//                        msg.title = "title";
-//                        msg.description = "description";
-//                        SendMessageToWX.Req req = new SendMessageToWX.Req();
-//                        req.transaction = String.valueOf( System.currentTimeMillis() );
-//                        req.message = msg;
-//                        req.scene = SendMessageToWX.Req.WXSceneSession;
-//                        iwxapi.sendReq( req );
-                        weChatShareUtil = WeChatShareUtil.getInstance(this);
-                        boolean result = false;
-                        result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
-                        if (!result) {
-                            Toast.makeText(MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT).show();
+                        iwxapi = WXAPIFactory.createWXAPI( this, String.valueOf( R.string.APP_ID_WX ), true );
+                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
+                        if (!iwxapi.isWXAppInstalled()) {
+                            Toast.makeText( this, "You haven't install Wechat",
+                                    Toast.LENGTH_SHORT ).show();
+                            return;
                         }
+                        WXWebpageObject webpageObject = new WXWebpageObject();
+                        webpageObject.webpageUrl = strUrl;
+                        WXMediaMessage msg = new WXMediaMessage( webpageObject );
+                        msg.title = "title";
+                        msg.description = "description";
+                        SendMessageToWX.Req req = new SendMessageToWX.Req();
+                        req.transaction = String.valueOf( System.currentTimeMillis() );
+                        req.message = msg;
+                        req.scene = SendMessageToWX.Req.WXSceneSession;
+                        iwxapi.sendReq( req );
+//                        weChatShareUtil = WeChatShareUtil.getInstance(this);
+//                        boolean result = false;
+//                        result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
+//                        if (!result) {
+//                            Toast.makeText(MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT).show();
+//                        }
                     }
                     break;
                 default:
@@ -560,7 +561,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
-
 
     /**
      * 发送音乐
