@@ -38,6 +38,7 @@ import android.widget.Toast;
 import com.tencent.connect.share.QQShare;
 import com.tencent.tauth.Tencent;
 
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -119,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements
         IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
         registerReceiver( mainActivityReceiver, intentFilter );
 
+        //绑定服务
         Intent intent = new Intent( this, MusicService.class );
         bindService( intent, serviceConnection, Context.BIND_AUTO_CREATE );
 
