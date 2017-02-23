@@ -57,25 +57,25 @@ public class MainActivity extends AppCompatActivity implements
     //按钮
     public Button mbtnMore, mbtnMode, mbtnLast, mbtnNext, mbtnPlay;
     //搜索视图
-    public SearchView msvSearch;
+    public SearchView searchView;
     //文本视图
     public TextView mtvName, mtvCurrentProgress, mtvTotalProgress;
     //列表视图
-    public ListView mlvList;
+    public ListView listView;
     //拖动条
-    public SeekBar msbPlayer;
+    public SeekBar seekBar;
     //抽屉布局
-    public DrawerLayout mdlMain;
+    public DrawerLayout drawerLayout;
     //导航视图
-    public NavigationView mnvMain;
+    public NavigationView navigationView;
 
     /**
      * 工具实例
      **/
     //列表管理器
-    private Handler mHandlerList = new Handler();
+    private Handler HandlerList = new Handler();
     //列表适配器
-    public ListAdapter mlaList;
+    public ListAdapter listAdapter;
     //腾讯API
     protected Tencent mTencent;
     //接收器
@@ -88,14 +88,17 @@ public class MainActivity extends AppCompatActivity implements
     public ArrayList<MusicBean> mMusicList = new ArrayList<>();
     //搜索列表
     public ArrayList<MusicBean> mSearchList = new ArrayList<>();
+    //当前播放条目
+    public MusicBean CurrentItem;
     //服务状态
     public String state;
     //播放模式序号
     private int Mode = 0, mode = 0;
     //分享类型
     final int ShareByQQ = 0, ShareByWechat = 1;
-    //当前播放条目
-    public MusicBean CurrentItem;
+    //发送类型
+    final int SendByQQ = 0, SendByBluetooth = 1;
+
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -133,26 +136,26 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void InitLayout() {
         //设置列表适配器
-        mlaList = new ListAdapter( getApplicationContext(), R.layout.item_music_list_layout );
+        listAdapter = new ListAdapter( getApplicationContext(), R.layout.item_music_list_layout );
 
         //设置列表视图
-        mlvList = (ListView) findViewById( R.id.lvList );
-        mlvList.setAdapter( mlaList );
-        mlvList.setTextFilterEnabled( true );
-        mlvList.setOnItemClickListener( this );
+        listView = (ListView) findViewById( R.id.lvList );
+        listView.setAdapter( listAdapter );
+        listView.setTextFilterEnabled( true );
+        listView.setOnItemClickListener( this );
 
         //设置搜索视图
-        msvSearch = (SearchView) findViewById( R.id.svSearch );
-        msvSearch.setOnQueryTextListener( this );
-        msvSearch.setSubmitButtonEnabled( true );
-        msvSearch.setFocusable( false );
+        searchView = (SearchView) findViewById( R.id.svSearch );
+        searchView.setOnQueryTextListener( this );
+        searchView.setSubmitButtonEnabled( true );
+        searchView.setFocusable( false );
 
         //设置拖动条
-        msbPlayer = (SeekBar) findViewById( R.id.sb );
-        msbPlayer.setOnSeekBarChangeListener( this );
+        seekBar = (SeekBar) findViewById( R.id.sb );
+        seekBar.setOnSeekBarChangeListener( this );
 
         //设置抽屉视图
-        mdlMain = (DrawerLayout) findViewById( R.id.drawer_layout );
+        drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
 
         //设置文本视图
         mtvName = (TextView) findViewById( R.id.tvName );
@@ -172,8 +175,8 @@ public class MainActivity extends AppCompatActivity implements
         mbtnPlay.setOnClickListener( this );
 
         //设置导航视图
-        mnvMain = (NavigationView) findViewById( R.id.nav_view );
-        mnvMain.setNavigationItemSelectedListener( this );
+        navigationView = (NavigationView) findViewById( R.id.nav_view );
+        navigationView.setNavigationItemSelectedListener( this );
     }
 
     /*****************************************************************************************
@@ -185,33 +188,39 @@ public class MainActivity extends AppCompatActivity implements
      **/
     @Override
     public void onClick(View v) {
-        msvSearch.clearFocus();
-        if (mMusicList != null && mMusicList.size() != 0) {
-            switch (v.getId()) {
-                case R.id.btnMore:          //扩展
-                    if (!mdlMain.isDrawerOpen( GravityCompat.START )) {
-                        mdlMain.openDrawer( GravityCompat.START );
-                    }
-                    break;
-                case R.id.btnMode:          //模式
-                    setPlayMode();
-                    break;
-                case R.id.btnLast:          //上一首
-                    Intent Intent_Last = new Intent( TransportFlag.MusicService );
-                    Intent_Last.putExtra( TransportFlag.state, TransportFlag.Last );
-                    sendBroadcast( Intent_Last );
-                    break;
-                case R.id.btnNext:          //下一首
-                    Intent Intent_Next = new Intent( TransportFlag.MusicService );
-                    Intent_Next.putExtra( TransportFlag.state, TransportFlag.Next );
-                    sendBroadcast( Intent_Next );
-                    break;
-                case R.id.btnPlay:          //播放
-                    Play_Pause();
-                    break;
-                default:
-                    break;
-            }
+        searchView.clearFocus();
+        switch (v.getId()) {
+            case R.id.btnMore:          //扩展
+                if (!drawerLayout.isDrawerOpen( GravityCompat.START )) {
+                    drawerLayout.openDrawer( GravityCompat.START );
+                }
+                break;
+            case R.id.btnMode:          //模式
+                setPlayMode();
+                break;
+            case R.id.btnLast:          //上一首
+                if (mMusicList == null || mMusicList.size() == 0) {
+                    Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+                    return;
+                }
+                Intent Intent_Last = new Intent( TransportFlag.MusicService );
+                Intent_Last.putExtra( TransportFlag.state, TransportFlag.Last );
+                sendBroadcast( Intent_Last );
+                break;
+            case R.id.btnNext:          //下一首
+                if (mMusicList == null || mMusicList.size() == 0) {
+                    Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+                    return;
+                }
+                Intent Intent_Next = new Intent( TransportFlag.MusicService );
+                Intent_Next.putExtra( TransportFlag.state, TransportFlag.Next );
+                sendBroadcast( Intent_Next );
+                break;
+            case R.id.btnPlay:          //播放和暂停
+                Play_Pause();
+                break;
+            default:
+                break;
         }
     }
 
@@ -220,9 +229,9 @@ public class MainActivity extends AppCompatActivity implements
      **/
     @Override
     public void onBackPressed() {
-        mdlMain = (DrawerLayout) findViewById( R.id.drawer_layout );
-        if (mdlMain.isDrawerOpen( GravityCompat.START )) {
-            mdlMain.closeDrawer( GravityCompat.START );
+        drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
+        if (drawerLayout.isDrawerOpen( GravityCompat.START )) {
+            drawerLayout.closeDrawer( GravityCompat.START );
         } else {
             super.onBackPressed();
         }
@@ -234,30 +243,26 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.nav_setToRingtone) {             //设为铃声
-            setMusicTo( RingtoneManager.TYPE_RINGTONE );
-        } else if (id == R.id.nav_setToNotification) {  //设为提示音
-            setMusicTo( RingtoneManager.TYPE_RINGTONE );
-        } else if (id == R.id.nav_setToAlarm) {         //设为闹钟
-            setMusicTo( RingtoneManager.TYPE_RINGTONE );
+        if (id == R.id.nav_shareByQQ) {                 //通过QQ分享            已实现
+            ShareMusicTo( ShareByQQ );
+        } else if (id == R.id.nav_shareByWechat) {      //通过微信分享
+            //ShareMusicTo(ShareByWechat);
+            MessageToUser();
         } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送
             MessageToUser();
             //SendMusicTo();
         } else if (id == R.id.nav_sendByBluetooth) {    //通过蓝牙发送
             MessageToUser();
             //SendMusicTo();
-        } else if (id == R.id.nav_shareByQQ) {          //通过QQ分享                已实现
-            ShareMusicTo( ShareByQQ );
-        } else if (id == R.id.nav_shareByWechat) {      //通过微信分享
-            //ShareMusicTo(ShareByWechat);
-            MessageToUser();
-        } else if (id == R.id.nav_version) {             //版本号                   已实现
+        } else if (id == R.id.nav_setToRingtone) {       //设为铃声              已实现
+            setRingtone();
+        } else if (id == R.id.nav_version) {             //版本号                已实现
             ShowVersion();
-        } else if (id == R.id.nav_exit) {               //退出应用                  已实现
+        } else if (id == R.id.nav_exit) {               //退出应用              已实现
             Exit();
         } else {
-            mdlMain = (DrawerLayout) findViewById( R.id.drawer_layout );
-            mdlMain.closeDrawer( GravityCompat.START );
+            drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
+            drawerLayout.closeDrawer( GravityCompat.START );
         }
         return true;
     }
@@ -267,11 +272,11 @@ public class MainActivity extends AppCompatActivity implements
      **/
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        msvSearch.clearFocus();
-        if ((mlaList.getItem( position )) != null) {
+        searchView.clearFocus();
+        if ((listAdapter.getItem( position )) != null) {
             Intent Intent_onItemClick = new Intent( TransportFlag.MusicService );
             Intent_onItemClick.putExtra( "position", position );
-            Intent_onItemClick.putExtra( "path", ((MusicBean) mlaList.getItem( position )).getMusicPath() );
+            Intent_onItemClick.putExtra( "path", ((MusicBean) listAdapter.getItem( position )).getMusicPath() );
             Intent_onItemClick.putExtra( TransportFlag.state, TransportFlag.PlayList );
             //Service播放选择条目     测试完毕
             sendBroadcast( Intent_onItemClick );
@@ -307,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-        msvSearch.clearFocus();
+        searchView.clearFocus();
     }
 
     @Override
@@ -330,11 +335,11 @@ public class MainActivity extends AppCompatActivity implements
         new Thread( new Runnable() {
             @Override
             public void run() {
-                mHandlerList.post( new Runnable() {
+                HandlerList.post( new Runnable() {
                     @Override
                     public void run() {
-                        mlaList.setList( mMusicList );
-                        mlaList.notifyDataSetChanged();
+                        listAdapter.setList( mMusicList );
+                        listAdapter.notifyDataSetChanged();
                         CurrentItem = mMusicList.get( 0 );
                     }
                 } );
@@ -376,28 +381,32 @@ public class MainActivity extends AppCompatActivity implements
     public void UpdateList(int UpdateType, String query) {
         switch (UpdateType) {
             case 0:
-                mlaList.setList( Search( query ) );
+                listAdapter.setList( Search( query ) );
                 sendMusicList( mSearchList );
                 break;
             case 1:
                 if (mMusicList == null) {
                     Log.e( "mMusicList", "null" );
                 } else {
-                    mlaList.setList( mMusicList );
+                    listAdapter.setList( mMusicList );
                     sendMusicList( mMusicList );
                 }
                 break;
             default:
                 break;
         }
-        mlvList.setAdapter( mlaList );
-        msvSearch.clearFocus();
+        listView.setAdapter( listAdapter );
+        searchView.clearFocus();
     }
 
     /**
      * 播放模式设定
      **/
     public void setPlayMode() {
+        if (mMusicList == null || mMusicList.size() == 0){
+            Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+            return;
+        }
         /** 消息框形式弹出选项：顺序播放，单曲循环，随机播放。默认：顺序播放 **/
         new AlertDialog.Builder( MainActivity.this )
                 .setTitle( "Set Mode" )
@@ -429,6 +438,10 @@ public class MainActivity extends AppCompatActivity implements
      * 播放和暂停切换
      **/
     public void Play_Pause() {
+        if (mMusicList == null || mMusicList.size() == 0) {
+            Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+            return;
+        }
         Intent Intent_PlayPause = new Intent( TransportFlag.MusicService );
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Intent_PlayPause.putExtra( TransportFlag.state, TransportFlag.PlayDefault );
@@ -467,72 +480,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * 设置声音
-     **/
-    public void setMusicTo(int ringType) {
-        if (mtvName.getText().toString().equals( "Music Name" )) {
-            Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
-        } else {
-            boolean isRingtone = false, isNotification = false, isAlarm = false;
-            final int RINGTONE = 1, NOTIFICATION = 2, ALARM = 4;
-            String strDialog = "";
-            switch (ringType) {
-                case RINGTONE:
-                    isRingtone = true;
-                    strDialog = "Ringtone";
-                    break;
-                case NOTIFICATION:
-                    isNotification = true;
-                    strDialog = "Notification";
-                    break;
-                case ALARM:
-                    isAlarm = true;
-                    strDialog = "Alarm";
-                    break;
-                default:
-                    break;
-            }
-            File file = new File( CurrentItem.getMusicPath() );
-            ContentValues values = new ContentValues();
-            values.put( MediaStore.MediaColumns.DATA, file.getAbsolutePath() );
-            values.put( MediaStore.MediaColumns.TITLE, file.getName() );
-            values.put( MediaStore.MediaColumns.MIME_TYPE, "audio/*" );
-            values.put( MediaStore.Audio.Media.IS_RINGTONE, isRingtone );
-            values.put( MediaStore.Audio.Media.IS_NOTIFICATION, isNotification );
-            values.put( MediaStore.Audio.Media.IS_ALARM, isAlarm );
-            values.put( MediaStore.Audio.Media.IS_MUSIC, false );
-            Uri uri = MediaStore.Audio.Media.getContentUriForPath( file.getAbsolutePath() );
-
-            Cursor cursor = this.getContentResolver().query( uri, null, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()}, null );
-            Uri newUri = null;
-            if (cursor.moveToFirst() && cursor.getCount() > 0) {
-                String _id = cursor.getString( 0 );
-                getContentResolver().update( uri, values, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()} );
-                newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
-            }
-            RingtoneManager.setActualDefaultRingtoneUri( this, ringType, newUri );
-
-            new AlertDialog.Builder( this )
-                    .setTitle( strDialog )
-                    .setMessage( RingtoneManager.getRingtone( this, newUri ).getTitle( this ) )
-                    .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    } ).show();
-            Log.e( "ringtone:", RingtoneManager.getRingtone( this, newUri ).getTitle( this ) );
-        }
-    }
-
-    /**
-     * 发送音乐
-     **/
-    public void SendMusicTo() {
-
-    }
-
-    /**
      * 分享音乐
      **/
     public void ShareMusicTo(int ShareBy) {
@@ -548,7 +495,7 @@ public class MainActivity extends AppCompatActivity implements
                     params.putString( QQShare.SHARE_TO_QQ_SUMMARY, mtvName.getText().toString() );
                     params.putString( QQShare.SHARE_TO_QQ_TARGET_URL,
                             "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" + mtvName.getText().toString()
-                                    .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ).replaceAll( " ","%20" ) );
+                                    .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ).replaceAll( " ", "%20" ) );
                     params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
                     params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
                     mTencent.shareToQQ( this, params, new ShareListener() );
@@ -559,6 +506,70 @@ public class MainActivity extends AppCompatActivity implements
                 default:
                     break;
             }
+        }
+    }
+
+
+    /**
+     * 发送音乐
+     **/
+    public void SendMusicTo(int SendBy) {
+        if (mtvName.getText().equals( "Music Name" )) {
+            Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
+        } else {
+            switch (SendBy) {
+                case SendByQQ:
+
+                    break;
+                case SendByBluetooth:
+
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    /**
+     * 设置铃声
+     **/
+    public void setRingtone() {
+        if (mtvName.getText().toString().equals( "Music Name" )) {
+            Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
+        } else {
+            File file = new File( CurrentItem.getMusicPath() );
+            if (!file.exists()) {
+                Toast.makeText( this, "File doesn't exist.", Toast.LENGTH_SHORT ).show();
+                return;
+            }
+            ContentValues values = new ContentValues();
+            values.put( MediaStore.MediaColumns.DATA, file.getAbsolutePath() );
+            values.put( MediaStore.MediaColumns.TITLE, file.getName() );
+            values.put( MediaStore.MediaColumns.MIME_TYPE, "audio/*" );
+            values.put( MediaStore.Audio.Media.IS_RINGTONE, true );
+            values.put( MediaStore.Audio.Media.IS_NOTIFICATION, false );
+            values.put( MediaStore.Audio.Media.IS_ALARM, false );
+            values.put( MediaStore.Audio.Media.IS_MUSIC, false );
+            Uri uri = MediaStore.Audio.Media.getContentUriForPath( file.getAbsolutePath() );
+
+            Cursor cursor = this.getContentResolver().query( uri, null, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()}, null );
+            Uri newUri = null;
+            if (cursor.moveToFirst() && cursor.getCount() > 0) {
+                String _id = cursor.getString( 0 );
+                getContentResolver().update( uri, values, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()} );
+                newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
+            }
+            RingtoneManager.setActualDefaultRingtoneUri( this, 1, newUri );
+            new AlertDialog.Builder( this )
+                    .setTitle( "Ringtone" )
+                    .setMessage( RingtoneManager.getRingtone( this, newUri ).getTitle( this ) )
+                    .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    } ).show();
+            Log.e( "ringtone:", RingtoneManager.getRingtone( this, newUri ).getTitle( this ) );
         }
     }
 
@@ -611,7 +622,7 @@ public class MainActivity extends AppCompatActivity implements
                 case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
                     TextViewTo = intent.getStringExtra( "TextViewTo" );
-                    msbPlayer.setProgress( SeekBarTo );
+                    seekBar.setProgress( SeekBarTo );
                     mtvCurrentProgress.setText( TextViewTo );
                     break;
                 case TransportFlag.NextItem:                                        //接收下一首          测试完毕
@@ -621,7 +632,7 @@ public class MainActivity extends AppCompatActivity implements
                 case TransportFlag.SeekPrepare:                                     //接收播放准备        测试完毕
                     SeekBarMax = intent.getIntExtra( "SeekBarMax", 0 );
                     TextViewTo = intent.getStringExtra( "TextViewTo" );
-                    msbPlayer.setMax( SeekBarMax );
+                    seekBar.setMax( SeekBarMax );
                     mtvTotalProgress.setText( TextViewTo );
                     mtvCurrentProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
                     mbtnPlay.setText( "PAUSE" );

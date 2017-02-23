@@ -1,22 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:title="Set">
+    <!--<item android:title="Set">-->
+        <!--<menu>-->
+
+            <!--<item-->
+                <!--android:id="@+id/nav_setToNotification"-->
+                <!--android:icon="@drawable/ic_menu_settings"-->
+                <!--android:title="Notification" />-->
+            <!--<item-->
+                <!--android:id="@+id/nav_setToAlarm"-->
+                <!--android:icon="@drawable/ic_menu_settings"-->
+                <!--android:title="Alarm" />-->
+        <!--</menu>-->
+    <!--</item>-->
+    <item android:title="Share">
         <menu>
             <item
-                android:id="@+id/nav_setToRingtone"
-                android:icon="@drawable/ic_menu_settings"
-                android:title="Ringtone" />
+                android:id="@+id/nav_shareByQQ"
+                android:icon="@drawable/ic_menu_share"
+                android:title="QQ" />
             <item
-                android:id="@+id/nav_setToNotification"
-                android:icon="@drawable/ic_menu_settings"
-                android:title="Notification" />
-            <item
-                android:id="@+id/nav_setToAlarm"
-                android:icon="@drawable/ic_menu_settings"
-                android:title="Alarm" />
+                android:id="@+id/nav_shareByWechat"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Wechat" />
         </menu>
     </item>
+    
     <item android:title="Send">
         <menu>
             <item
@@ -30,19 +40,11 @@
         </menu>
     </item>
 
-    <item android:title="Share">
-        <menu>
-            <item
-                android:id="@+id/nav_shareByQQ"
-                android:icon="@drawable/ic_menu_share"
-                android:title="QQ" />
-            <item
-                android:id="@+id/nav_shareByWechat"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Wechat" />
-        </menu>
-    </item>
     <group android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_setToRingtone"
+            android:icon="@drawable/ic_menu_settings"
+            android:title="Ringtone" />
         <item
             android:id="@+id/nav_version"
             android:icon="@drawable/ic_menu_settings"

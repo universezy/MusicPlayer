@@ -37,7 +37,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <!--  替换APPID  -->
-                <data android:scheme="tencent11046333759"/>
+                <data android:scheme="tencent1105926247"/>
             </intent-filter>
         </activity>
 
@@ -47,7 +47,9 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
         </activity>
 
-        <service android:name="com.example.administrator.musicplayer.MusicService"/>
+        <service
+            android:name="com.example.administrator.musicplayer.MusicService"
+            android:enabled="true"/>
 
         <receiver android:name="com.example.administrator.musicplayer.MusicService">
             <intent-filter>

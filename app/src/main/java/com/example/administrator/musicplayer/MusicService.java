@@ -37,13 +37,13 @@ public class MusicService extends Service {
     //播放顺序数组索引
     public int PlayArrayIndex;
     //播放管理器
-    public Handler mHandlerPlay = new Handler();
+    public Handler HandlerPlay = new Handler();
     //拖动条管理器
-    public Handler mHandlerSeekbar = new Handler();
+    public Handler HandlerSeekbar = new Handler();
     //播放线程
-    public Runnable mRunnablePlay;
+    public Runnable RunnablePlay;
     //拖动条线程
-    public Runnable mRunnableSeekbar;
+    public Runnable RunnableSeekbar;
     //接收器
     MusicServiceReceiver musicServiceReceiver = new MusicServiceReceiver();
     //服务状态
@@ -60,16 +60,16 @@ public class MusicService extends Service {
         registerReceiver( musicServiceReceiver, intentFilter );
 
         //设置播放线程
-        mRunnablePlay = new Runnable() {
+        RunnablePlay = new Runnable() {
             @Override
             public void run() {
                 mediaplayer.start();
-                mHandlerSeekbar.post( mRunnableSeekbar );
+                HandlerSeekbar.post( RunnableSeekbar );
             }
         };
 
         //设置拖动条线程
-        mRunnableSeekbar = new Runnable() {
+        RunnableSeekbar = new Runnable() {
             @Override
             public void run() {
                 try {
@@ -79,7 +79,7 @@ public class MusicService extends Service {
                     Intent_UpdateSeekBar.putExtra( TransportFlag.state, TransportFlag.SeekTo );
                     //更新拖动条信息给Activity      测试完毕
                     sendBroadcast( Intent_UpdateSeekBar );
-                    mHandlerSeekbar.postDelayed( mRunnableSeekbar, 1000 );
+                    HandlerSeekbar.postDelayed( RunnableSeekbar, 1000 );
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -116,7 +116,7 @@ public class MusicService extends Service {
         mediaplayer.stop();
         mediaplayer.release();
         //将线程销毁掉
-        mHandlerSeekbar.removeCallbacks( mRunnableSeekbar );
+        HandlerSeekbar.removeCallbacks( RunnableSeekbar );
         unregisterReceiver( musicServiceReceiver );
     }
 
@@ -191,7 +191,7 @@ public class MusicService extends Service {
      **/
     public void playMusic(String path) {
         if (path != null) {
-            mHandlerSeekbar.removeCallbacks( mRunnableSeekbar );
+            HandlerSeekbar.removeCallbacks( RunnableSeekbar );
             try {
                 mediaplayer.reset();
                 mediaplayer.setDataSource( path );
@@ -209,7 +209,7 @@ public class MusicService extends Service {
                         Intent_NextItem.putExtra( TransportFlag.state, TransportFlag.NextItem );
                         //发送下一首给Activity用于Toast     测试完毕
                         sendBroadcast( Intent_NextItem );
-                        mHandlerSeekbar.postDelayed( new Runnable() {
+                        HandlerSeekbar.postDelayed( new Runnable() {
                             @Override
                             public void run() {
                                 playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
@@ -236,7 +236,7 @@ public class MusicService extends Service {
             Intent_CurrentItem.putExtra( TransportFlag.state, CurrentItem );
             //发送当前播放条目给Activity     测试完毕
             sendBroadcast( Intent_CurrentItem );
-            mHandlerPlay.post( mRunnablePlay );
+            HandlerPlay.post( RunnablePlay );
         }
     }
 
