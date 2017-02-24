@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -270,13 +271,13 @@ public class MainActivity extends AppCompatActivity implements
         int id = item.getItemId();
         if (id == R.id.nav_shareByQQ) {                 //通过QQ分享            已实现
             ShareMusicTo( ShareByQQ );
-        } else if (id == R.id.nav_shareByWechat) {      //通过微信分享
+        } else if (id == R.id.nav_shareByWechat) {      //通过微信分享          等待审核后替换appid
             //ShareMusicTo( ShareByWechat );
             MessageToUser();
-        } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送
+        } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送           未找到api
             MessageToUser();
             //SendMusicTo(SendByQQ);
-        } else if (id == R.id.nav_sendByWechat) {       //通过微信发送
+        } else if (id == R.id.nav_sendByWechat) {       //通过微信发送          等待审核后
             MessageToUser();
             //SendMusicTo(SendByWechat);
         } else if (id == R.id.nav_sendByBluetooth) {    //通过蓝牙发送
@@ -515,45 +516,59 @@ public class MainActivity extends AppCompatActivity implements
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
             return;
         }
-        String strUrl = "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" + mtvName.getText().toString()
+        final String strUrl = "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" + mtvName.getText().toString()
                 .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ).replaceAll( " ", "%20" );
         switch (ShareBy) {
             case ShareByQQ:
-                tencent = Tencent.createInstance( String.valueOf( R.string.APP_ID_QQ ), this );
-                final Bundle params = new Bundle();
-                params.putInt( QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT );
-                params.putString( QQShare.SHARE_TO_QQ_TITLE, "Share music to friend" );
-                params.putString( QQShare.SHARE_TO_QQ_SUMMARY, mtvName.getText().toString() );
-                params.putString( QQShare.SHARE_TO_QQ_TARGET_URL, strUrl );
-                params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
-                params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
-                tencent.shareToQQ( this, params, new ShareListener() );
+                new Thread( new Runnable() {
+                    @Override
+                    public void run() {
+                        tencent = Tencent.createInstance( String.valueOf( R.string.APP_ID_QQ ), MainActivity.this );
+                        final Bundle params = new Bundle();
+                        params.putInt( QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT );
+                        params.putString( QQShare.SHARE_TO_QQ_TITLE, "Share music to friend" );
+                        params.putString( QQShare.SHARE_TO_QQ_SUMMARY, mtvName.getText().toString() );
+                        params.putString( QQShare.SHARE_TO_QQ_TARGET_URL, strUrl );
+                        params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
+                        params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
+                        tencent.shareToQQ( MainActivity.this, params, new ShareListener() );
+                    }
+                } ).start();
+
                 break;
             case ShareByWechat:
+                new Thread( new Runnable() {
+                    @Override
+                    public void run() {
 
-                iwxapi = WXAPIFactory.createWXAPI( this, String.valueOf( R.string.APP_ID_WX ), true );
-                iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
-                if (!iwxapi.isWXAppInstalled()) {
-                    Toast.makeText( this, "You haven't install Wechat",
-                            Toast.LENGTH_SHORT ).show();
-                    return;
-                }
-                WXWebpageObject webpageObject = new WXWebpageObject();
-                webpageObject.webpageUrl = strUrl;
-                WXMediaMessage msg = new WXMediaMessage( webpageObject );
-                msg.title = "title";
-                msg.description = "description";
-                SendMessageToWX.Req req = new SendMessageToWX.Req();
-                req.transaction = String.valueOf( System.currentTimeMillis() );
-                req.message = msg;
-                req.scene = SendMessageToWX.Req.WXSceneSession;
-                iwxapi.sendReq( req );
+
+                        iwxapi = WXAPIFactory.createWXAPI( MainActivity.this, String.valueOf( R.string.APP_ID_WX ), true );
+                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
+                        if (!iwxapi.isWXAppInstalled()) {
+                            Toast.makeText( MainActivity.this, "You haven't install Wechat",
+                                    Toast.LENGTH_SHORT ).show();
+                            return;
+                        }
+                        WXWebpageObject webpageObject = new WXWebpageObject();
+                        webpageObject.webpageUrl = strUrl;
+                        WXMediaMessage msg = new WXMediaMessage( webpageObject );
+                        msg.title = "title";
+                        msg.description = "description";
+                        SendMessageToWX.Req req = new SendMessageToWX.Req();
+                        req.transaction = String.valueOf( System.currentTimeMillis() );
+                        req.message = msg;
+                        req.scene = SendMessageToWX.Req.WXSceneSession;
+                        iwxapi.sendReq( req );
 //                        weChatShareUtil = WeChatShareUtil.getInstance(this);
 //                        boolean result = false;
 //                        result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
 //                        if (!result) {
 //                            Toast.makeText(MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT).show();
 //                        }
+
+
+                    }
+                } ).start();
                 break;
             default:
                 break;
@@ -587,47 +602,52 @@ public class MainActivity extends AppCompatActivity implements
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
         } else {
-            File file = new File( CurrentItem.getMusicPath() );
-            if (!file.exists()) {
-                Toast.makeText( this, "File doesn't exist.", Toast.LENGTH_SHORT ).show();
-                return;
-            }
-            ContentValues values = new ContentValues();
-            values.put( MediaStore.MediaColumns.DATA, file.getAbsolutePath() );
-            values.put( MediaStore.MediaColumns.TITLE, file.getName() );
-            values.put( MediaStore.MediaColumns.MIME_TYPE, "audio/*" );
-            values.put( MediaStore.Audio.Media.IS_RINGTONE, true );
-            values.put( MediaStore.Audio.Media.IS_NOTIFICATION, false );
-            values.put( MediaStore.Audio.Media.IS_ALARM, false );
-            values.put( MediaStore.Audio.Media.IS_MUSIC, false );
-            Uri uri = MediaStore.Audio.Media.getContentUriForPath( file.getAbsolutePath() );
-
-            Cursor cursor = this.getContentResolver().query( uri, null, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()}, null );
-            Uri newUri = null;
-            if (cursor.moveToFirst() && cursor.getCount() > 0) {
-                String _id = cursor.getString( 0 );
-                getContentResolver().update( uri, values, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()} );
-                newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
-            }
-
-            final Uri finalNewUri = newUri;
-            new AlertDialog.Builder( this )
-                    .setTitle( "Are you sure to set the music as ringtone ?" )
-                    .setMessage( RingtoneManager.getRingtone( this, newUri ).getTitle( this ) )
-                    .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            RingtoneManager.setActualDefaultRingtoneUri( MainActivity.this, 1, finalNewUri );
-                            Log.e( "ringtone:", RingtoneManager.getRingtone( MainActivity.this, finalNewUri ).getTitle( MainActivity.this ) );
-                            dialog.dismiss();
-                        }
-                    } )
-                    .setNegativeButton( "Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    } ).show();
+            new Thread( new Runnable() {
+                @Override
+                public void run() {
+                    File file = new File( CurrentItem.getMusicPath() );
+                    if (!file.exists()) {
+                        Toast.makeText( MainActivity.this, "File doesn't exist.", Toast.LENGTH_SHORT ).show();
+                        return;
+                    }
+                    ContentValues values = new ContentValues();
+                    values.put( MediaStore.MediaColumns.DATA, file.getAbsolutePath() );
+                    values.put( MediaStore.MediaColumns.TITLE, file.getName() );
+                    values.put( MediaStore.MediaColumns.MIME_TYPE, "audio/*" );
+                    values.put( MediaStore.Audio.Media.IS_RINGTONE, true );
+                    values.put( MediaStore.Audio.Media.IS_NOTIFICATION, false );
+                    values.put( MediaStore.Audio.Media.IS_ALARM, false );
+                    values.put( MediaStore.Audio.Media.IS_MUSIC, false );
+                    Uri uri = MediaStore.Audio.Media.getContentUriForPath( file.getAbsolutePath() );
+                    Cursor cursor = getContentResolver().query( uri, null, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()}, null );
+                    Uri newUri = null;
+                    if (cursor.moveToFirst() && cursor.getCount() > 0) {
+                        String _id = cursor.getString( 0 );
+                        getContentResolver().update( uri, values, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()} );
+                        newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
+                    }
+                    final Uri NewUri = newUri;
+                    Looper.prepare();
+                    new AlertDialog.Builder( MainActivity.this )
+                            .setTitle( "Are you sure to set the music as ringtone ?" )
+                            .setMessage( RingtoneManager.getRingtone( MainActivity.this, NewUri ).getTitle( MainActivity.this ) )
+                            .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    RingtoneManager.setActualDefaultRingtoneUri( MainActivity.this, 1, NewUri );
+                                    Log.e( "ringtone:", RingtoneManager.getRingtone( MainActivity.this, NewUri ).getTitle( MainActivity.this ) );
+                                    dialog.dismiss();
+                                }
+                            } )
+                            .setNegativeButton( "Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            } ).show();
+                    Looper.loop();
+                }
+            } ).start();
         }
     }
 
