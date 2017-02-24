@@ -30,9 +30,8 @@ import java.util.List;
 import java.util.UUID;
 
 public class BluetoothActivity extends AppCompatActivity implements View.OnClickListener, ListView.OnItemClickListener {
-    MusicBean CurrentItem;
-    //发送的文件路径
-   // private String filePath;
+    //发送的歌曲
+    private MusicBean CurrentItem;
     //接收器
     protected BluetoothReceiver bluetoothReceiver = new BluetoothReceiver();
     //蓝牙适配器
@@ -49,8 +48,6 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
     private BluetoothSocket bluetoothSocket;
     //蓝牙成功打开
     final static int REQUEST_ENABLE_BT = 0;
-    //蓝牙开启状态
-    boolean isBluetoothOpen;
     //列表管理器
     private Handler HandlerList = new Handler();
     //文本视图
@@ -69,7 +66,7 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         CurrentItem = bundle.getParcelable( "CurrentItem" );
 
         InitLayout();
-        ScanBluetooth();
+        StartBluetooth();
     }
 
     @Override
@@ -78,11 +75,9 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
             if (resultCode == Activity.RESULT_OK) {
                 //成功
                 Toast.makeText( this, "Start bluetooth successfully.", Toast.LENGTH_SHORT ).show();
-                isBluetoothOpen = true;
             } else {
                 //失败
                 Toast.makeText( this, "Start bluetooth failed.", Toast.LENGTH_SHORT ).show();
-                isBluetoothOpen = false;
             }
         }
     }
@@ -127,7 +122,7 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         listView.setAdapter( arrayAdapter );
         listView.setOnItemClickListener( this );
 
-        textView = (TextView)findViewById( R.id.tvCurrentItem );
+        textView = (TextView) findViewById( R.id.tvCurrentItem );
         textView.setText( CurrentItem.getMusicName() );
 
         mbtnBack = (Button) findViewById( R.id.btnBack );
@@ -136,7 +131,7 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         mbtnSend.setOnClickListener( this );
     }
 
-    public void ScanBluetooth() {
+    public void StartBluetooth() {
         //检测手机是否有蓝牙模块
         if (bluetoothAdapter == null) {
             Toast.makeText( this, "No bluetooth device found.", Toast.LENGTH_SHORT ).show();
@@ -147,15 +142,11 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
             Intent intent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
             startActivityForResult( intent, REQUEST_ENABLE_BT );
         }
-        if(bluetoothAdapter.isEnabled()){
-            Log.e( "Enabled","Enabled" );
-        }else{
-            Log.e( "Disabled","Disabled" );
+        if (bluetoothAdapter.isEnabled()) {
+            Log.e( "Enabled", "Enabled" );
+        } else {
+            Log.e( "Disabled", "Disabled" );
             return;
-        }
-        if (!isBluetoothOpen) {
-            Toast.makeText( this, "Fail to start bluetooth.", Toast.LENGTH_SHORT ).show();
-            //return;
         }
         //设置过滤器
         IntentFilter intentFilter = new IntentFilter( BluetoothDevice.ACTION_FOUND );

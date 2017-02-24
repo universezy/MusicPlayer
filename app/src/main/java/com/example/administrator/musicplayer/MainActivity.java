@@ -589,7 +589,7 @@ public class MainActivity extends AppCompatActivity implements
                     Intent intent_SendByBluetooth = new Intent( MainActivity.this, BluetoothActivity.class );
                     //用Bundle携带数据
                     Bundle bundle = new Bundle();
-                    bundle.putString( "filePath", filePath );
+                    bundle.putParcelable( "CurrentItem",CurrentItem );
                     intent_SendByBluetooth.putExtras( bundle );
                     startActivity( intent_SendByBluetooth );
                     break;
