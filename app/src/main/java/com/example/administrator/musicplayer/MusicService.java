@@ -112,12 +112,12 @@ public class MusicService extends Service {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         mediaplayer.stop();
         mediaplayer.release();
         //将线程销毁掉
         HandlerSeekbar.removeCallbacks( RunnableSeekbar );
         unregisterReceiver( musicServiceReceiver );
+        super.onDestroy();
     }
 
     /**

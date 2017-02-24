@@ -143,6 +143,8 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
+        unregisterReceiver( mainActivityReceiver );
+        unbindService( serviceConnection );
         super.onDestroy();
     }
 
@@ -680,8 +682,6 @@ public class MainActivity extends AppCompatActivity implements
         Intent_Exit.putExtra( TransportFlag.state, TransportFlag.Exit );
         //发送退出信号给Service        测试完毕
         sendBroadcast( Intent_Exit );
-        unregisterReceiver( mainActivityReceiver );
-        unbindService( serviceConnection );
         MainActivity.this.finish();
     }
 

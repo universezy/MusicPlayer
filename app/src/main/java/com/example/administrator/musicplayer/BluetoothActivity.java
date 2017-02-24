@@ -85,8 +85,8 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         unregisterReceiver( bluetoothReceiver );
+        super.onDestroy();
     }
 
     @Override
@@ -148,7 +148,7 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         }
         if (!isBluetoothOpen) {
             Toast.makeText( this, "Fail to start bluetooth.", Toast.LENGTH_SHORT ).show();
-            return;
+            //return;
         }
         //设置过滤器
         IntentFilter intentFilter = new IntentFilter( BluetoothDevice.ACTION_FOUND );
@@ -252,6 +252,8 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         // 发送读取的数据到服务端
         try {
             outputStream.flush();
+            inputStream.close();
+            outputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
