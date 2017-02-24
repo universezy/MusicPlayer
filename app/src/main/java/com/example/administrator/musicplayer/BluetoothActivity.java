@@ -20,7 +20,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,9 +46,9 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
     //蓝牙Socket连接
     private BluetoothSocket bluetoothSocket;
     //蓝牙成功打开
-    final static int REQUEST_ENABLE_BT = 1;
+    final static int REQUEST_ENABLE_BT = 0;
     //蓝牙开启状态
-    boolean isOpenBlueToolth;
+    boolean isBluetoothOpen;
     //列表管理器
     private Handler HandlerList = new Handler();
     //列表视图
@@ -65,7 +64,6 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         Bundle bundle = this.getIntent().getExtras();
         filePath = bundle.getString( "filePath" );
 
-
         InitLayout();
         ScanBluetooth();
     }
@@ -75,12 +73,12 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) {
                 //成功
-                Toast.makeText( this, "Start bluetooth successfully", Toast.LENGTH_SHORT ).show();
-                isOpenBlueToolth = true;
+                Toast.makeText( this, "Start bluetooth successfully.", Toast.LENGTH_SHORT ).show();
+                isBluetoothOpen = true;
             } else {
                 //失败
-                Toast.makeText( this, "Start bluetooth failed", Toast.LENGTH_SHORT ).show();
-                isOpenBlueToolth = false;
+                Toast.makeText( this, "Start bluetooth failed.", Toast.LENGTH_SHORT ).show();
+                isBluetoothOpen = false;
             }
         }
     }
@@ -91,11 +89,11 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         unregisterReceiver( bluetoothReceiver );
     }
 
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btnBack:
+                bluetoothAdapter.disable();
                 BluetoothActivity.this.finish();
                 break;
             case R.id.btnSend:
@@ -119,9 +117,9 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void InitLayout() {
-        arrayAdapter = new ArrayAdapter( BluetoothActivity.this, R.layout.item_music_list_layout );
+        arrayAdapter = new ArrayAdapter( getApplicationContext(), R.layout.item_music_list_layout );
 
-        listView = (ListView) findViewById( R.id.lvList );
+        listView = (ListView) findViewById( R.id.tvDeviceList );
         listView.setAdapter( arrayAdapter );
         listView.setOnItemClickListener( this );
 
@@ -135,13 +133,20 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         //检测手机是否有蓝牙模块
         if (bluetoothAdapter == null) {
             Toast.makeText( this, "No bluetooth device found.", Toast.LENGTH_SHORT ).show();
+            return;
+        }
+        if(bluetoothAdapter.isEnabled()){
+            Log.e( "Enabled","Enabled" );
+        }else{
+            bluetoothAdapter.enable();
+            Log.e( "Disabled","Disabled" );
         }
         //打开系统的蓝牙设置
         if (!bluetoothAdapter.isEnabled()) {
             Intent intent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
             startActivityForResult( intent, REQUEST_ENABLE_BT );
         }
-        if (!isOpenBlueToolth) {
+        if (!isBluetoothOpen) {
             Toast.makeText( this, "Fail to start bluetooth.", Toast.LENGTH_SHORT ).show();
             return;
         }
@@ -179,13 +184,13 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
                 try {
                     if (bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
                         Method creMethod = BluetoothDevice.class.getMethod( "createBond" );
-                        Toast.makeText( BluetoothActivity.this, "正在配对", Toast.LENGTH_SHORT ).show();
+                        Toast.makeText( BluetoothActivity.this, "Matching.", Toast.LENGTH_SHORT ).show();
                         creMethod.invoke( bluetoothDevice );
                     } else {
-                        Toast.makeText( BluetoothActivity.this, "已经配对", Toast.LENGTH_SHORT ).show();
+                        Toast.makeText( BluetoothActivity.this, "Matched.", Toast.LENGTH_SHORT ).show();
                     }
                 } catch (Exception e) {
-                    Toast.makeText( BluetoothActivity.this, "无法配对", Toast.LENGTH_SHORT ).show();
+                    Toast.makeText( BluetoothActivity.this, "Fail to match.", Toast.LENGTH_SHORT ).show();
                 }
                 try {
                     bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord( UUID.randomUUID() );
@@ -194,16 +199,16 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
                 }
                 try {
                     bluetoothSocket.connect();
-                    Toast.makeText( BluetoothActivity.this, "连接成功" + bluetoothSocket.isConnected(), Toast.LENGTH_SHORT ).show();
+                    Toast.makeText( BluetoothActivity.this, "Connect successful." + bluetoothSocket.isConnected(), Toast.LENGTH_SHORT ).show();
                 } catch (IOException e) {
-                    Toast.makeText( BluetoothActivity.this, "连接失败" + e.toString() + bluetoothSocket.isConnected(), Toast.LENGTH_SHORT ).show();
+                    Toast.makeText( BluetoothActivity.this, "Connect failed." + e.toString() + bluetoothSocket.isConnected(), Toast.LENGTH_SHORT ).show();
                     try {
                         if (bluetoothSocket != null) {
                             bluetoothSocket.close();
                             bluetoothSocket = null;
                         }
                     } catch (IOException e2) {
-                        Toast.makeText( BluetoothActivity.this, "关闭socket失败" + bluetoothSocket.isConnected(), Toast.LENGTH_SHORT ).show();
+                        Toast.makeText( BluetoothActivity.this, "Fail to close socket." + bluetoothSocket.isConnected(), Toast.LENGTH_SHORT ).show();
                     }
                 }
             }
@@ -217,10 +222,10 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
             return;
         }
         if (!bluetoothSocket.isConnected()) {
-            Toast.makeText( this, "未建立蓝牙连接", Toast.LENGTH_SHORT ).show();
+            Toast.makeText( this, "Bluetooth is disconnected", Toast.LENGTH_SHORT ).show();
             return;
         }
-        //传输音乐
+        // 传输音乐
         // 获取Socket的OutputStream对象用于发送数据。
         // 创建一个InputStream用户读取要发送的文件。
         InputStream inputStream = null;
@@ -229,8 +234,6 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
             inputStream = new FileInputStream( filePath );
             // 获取Socket的OutputStream对象用于发送数据。
             outputStream = bluetoothSocket.getOutputStream();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -262,7 +265,6 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
     class BluetoothReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            // TODO Auto-generated method stub
             //接受intent
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals( action )) {
