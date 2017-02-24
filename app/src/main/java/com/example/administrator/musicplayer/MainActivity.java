@@ -90,11 +90,12 @@ public class MainActivity extends AppCompatActivity implements
     protected Tencent tencent;
     //微信API
     protected IWXAPI iwxapi;
+
+
     //分享工具类
     //public WeChatShareUtil weChatShareUtil;
     //接收器
     protected MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
-
     /**
      * 自定义元素
      **/
@@ -512,53 +513,50 @@ public class MainActivity extends AppCompatActivity implements
     public void ShareMusicTo(int ShareBy) {
         if (mtvName.getText().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
-        } else {
-            String strUrl = "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" + mtvName.getText().toString()
-                    .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ).replaceAll( " ", "%20" );
-            switch (ShareBy) {
-                case ShareByQQ:
-                    tencent = Tencent.createInstance( String.valueOf( R.string.APP_ID_QQ ), this );
-                    final Bundle params = new Bundle();
-                    params.putInt( QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT );
-                    params.putString( QQShare.SHARE_TO_QQ_TITLE, "Share music to friend" );
-                    params.putString( QQShare.SHARE_TO_QQ_SUMMARY, mtvName.getText().toString() );
-                    params.putString( QQShare.SHARE_TO_QQ_TARGET_URL, strUrl );
-                    params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
-                    params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
-                    tencent.shareToQQ( this, params, new ShareListener() );
-                    break;
-                case ShareByWechat:
-                    if (mtvName.getText().equals( "Music Name" )) {
-                        Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
-                    } else {
-                        iwxapi = WXAPIFactory.createWXAPI( this, String.valueOf( R.string.APP_ID_WX ), true );
-                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
-                        if (!iwxapi.isWXAppInstalled()) {
-                            Toast.makeText( this, "You haven't install Wechat",
-                                    Toast.LENGTH_SHORT ).show();
-                            return;
-                        }
-                        WXWebpageObject webpageObject = new WXWebpageObject();
-                        webpageObject.webpageUrl = strUrl;
-                        WXMediaMessage msg = new WXMediaMessage( webpageObject );
-                        msg.title = "title";
-                        msg.description = "description";
-                        SendMessageToWX.Req req = new SendMessageToWX.Req();
-                        req.transaction = String.valueOf( System.currentTimeMillis() );
-                        req.message = msg;
-                        req.scene = SendMessageToWX.Req.WXSceneSession;
-                        iwxapi.sendReq( req );
+            return;
+        }
+        String strUrl = "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" + mtvName.getText().toString()
+                .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ).replaceAll( " ", "%20" );
+        switch (ShareBy) {
+            case ShareByQQ:
+                tencent = Tencent.createInstance( String.valueOf( R.string.APP_ID_QQ ), this );
+                final Bundle params = new Bundle();
+                params.putInt( QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT );
+                params.putString( QQShare.SHARE_TO_QQ_TITLE, "Share music to friend" );
+                params.putString( QQShare.SHARE_TO_QQ_SUMMARY, mtvName.getText().toString() );
+                params.putString( QQShare.SHARE_TO_QQ_TARGET_URL, strUrl );
+                params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
+                params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
+                tencent.shareToQQ( this, params, new ShareListener() );
+                break;
+            case ShareByWechat:
+
+                iwxapi = WXAPIFactory.createWXAPI( this, String.valueOf( R.string.APP_ID_WX ), true );
+                iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
+                if (!iwxapi.isWXAppInstalled()) {
+                    Toast.makeText( this, "You haven't install Wechat",
+                            Toast.LENGTH_SHORT ).show();
+                    return;
+                }
+                WXWebpageObject webpageObject = new WXWebpageObject();
+                webpageObject.webpageUrl = strUrl;
+                WXMediaMessage msg = new WXMediaMessage( webpageObject );
+                msg.title = "title";
+                msg.description = "description";
+                SendMessageToWX.Req req = new SendMessageToWX.Req();
+                req.transaction = String.valueOf( System.currentTimeMillis() );
+                req.message = msg;
+                req.scene = SendMessageToWX.Req.WXSceneSession;
+                iwxapi.sendReq( req );
 //                        weChatShareUtil = WeChatShareUtil.getInstance(this);
 //                        boolean result = false;
 //                        result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
 //                        if (!result) {
 //                            Toast.makeText(MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT).show();
 //                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
+                break;
+            default:
+                break;
         }
     }
 
@@ -611,17 +609,25 @@ public class MainActivity extends AppCompatActivity implements
                 getContentResolver().update( uri, values, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()} );
                 newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
             }
-            RingtoneManager.setActualDefaultRingtoneUri( this, 1, newUri );
+
+            final Uri finalNewUri = newUri;
             new AlertDialog.Builder( this )
-                    .setTitle( "Ringtone" )
+                    .setTitle( "Are you sure to set the music as ringtone ?" )
                     .setMessage( RingtoneManager.getRingtone( this, newUri ).getTitle( this ) )
                     .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            RingtoneManager.setActualDefaultRingtoneUri( MainActivity.this, 1, finalNewUri );
+                            Log.e( "ringtone:", RingtoneManager.getRingtone( MainActivity.this, finalNewUri ).getTitle( MainActivity.this ) );
+                            dialog.dismiss();
+                        }
+                    } )
+                    .setNegativeButton( "Cancel", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
                         }
                     } ).show();
-            Log.e( "ringtone:", RingtoneManager.getRingtone( this, newUri ).getTitle( this ) );
         }
     }
 
