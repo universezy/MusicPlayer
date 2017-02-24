@@ -56,20 +56,28 @@
             android:launchMode="singleTask">
         </activity>
 
+        <activity
+            android:name=".BluetoothActivity">
+        </activity>
+
         <service
             android:name="com.example.administrator.musicplayer.MusicService"
             android:enabled="true"/>
 
-        <receiver android:name="com.example.administrator.musicplayer.MusicService">
+        <receiver android:name="com.example.administrator.musicplayer.MusicService$MusicServiceReceiver">
             <intent-filter>
                 <action android:name="MainActivity"/>
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.example.administrator.musicplayer.MainActivity">
+        <receiver android:name="com.example.administrator.musicplayer.MainActivity$MainActivityReceiver">
             <intent-filter>
                 <action android:name="MusicService"/>
             </intent-filter>
+        </receiver>
+
+        <receiver android:name="com.example.administrator.musicplayer.BluetoothActivity$BluetoothReceiver">
+
         </receiver>
     </application>
 

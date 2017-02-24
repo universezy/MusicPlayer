@@ -85,18 +85,17 @@ public class MainActivity extends AppCompatActivity implements
     protected MusicService.ServiceBinder binder;
     //列表管理器
     private Handler HandlerList = new Handler();
-    //列表适配器
+    //音乐列表适配器
     private ListAdapter listAdapter;
     //QQAPI
     protected Tencent tencent;
     //微信API
     protected IWXAPI iwxapi;
-
-
-    //分享工具类
+    //微信分享工具类
     //public WeChatShareUtil weChatShareUtil;
     //接收器
     protected MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
+
     /**
      * 自定义元素
      **/
@@ -114,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements
     final static int ShareByQQ = 0, ShareByWechat = 1;
     //发送类型
     final static int SendByQQ = 0, SendByWechat = 2, SendByBluetooth = 2;
+
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -274,15 +274,15 @@ public class MainActivity extends AppCompatActivity implements
         } else if (id == R.id.nav_shareByWechat) {      //通过微信分享          等待审核后替换appid
             //ShareMusicTo( ShareByWechat );
             MessageToUser();
-        } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送           未找到api
+        } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送            未找到api
             MessageToUser();
             //SendMusicTo(SendByQQ);
         } else if (id == R.id.nav_sendByWechat) {       //通过微信发送          等待审核后
             MessageToUser();
             //SendMusicTo(SendByWechat);
         } else if (id == R.id.nav_sendByBluetooth) {    //通过蓝牙发送
-            MessageToUser();
-            //SendMusicTo(SendByBluetooth);
+            //MessageToUser();
+            SendMusicTo( SendByBluetooth );
         } else if (id == R.id.nav_setToRingtone) {      //设为铃声              已实现
             SetRingtone();
         } else if (id == R.id.nav_version) {            //版本号                已实现
@@ -540,8 +540,6 @@ public class MainActivity extends AppCompatActivity implements
                 new Thread( new Runnable() {
                     @Override
                     public void run() {
-
-
                         iwxapi = WXAPIFactory.createWXAPI( MainActivity.this, String.valueOf( R.string.APP_ID_WX ), true );
                         iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
                         if (!iwxapi.isWXAppInstalled()) {
@@ -565,8 +563,6 @@ public class MainActivity extends AppCompatActivity implements
 //                        if (!result) {
 //                            Toast.makeText(MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT).show();
 //                        }
-
-
                     }
                 } ).start();
                 break;
@@ -582,12 +578,18 @@ public class MainActivity extends AppCompatActivity implements
         if (mtvName.getText().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
         } else {
+            String filePath = CurrentItem.getMusicPath();
             switch (SendBy) {
                 case SendByQQ:
 
                     break;
                 case SendByBluetooth:
-
+                    Intent intent_SendByBluetooth = new Intent( MainActivity.this, BluetoothActivity.class );
+                    //用Bundle携带数据
+                    Bundle bundle = new Bundle();
+                    bundle.putString( "filePath", filePath );
+                    intent_SendByBluetooth.putExtras( bundle );
+                    startActivity( intent_SendByBluetooth );
                     break;
                 default:
                     break;
