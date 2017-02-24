@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (null != tencent)
+        if (tencent != null)
             Tencent.onActivityResultData( requestCode, resultCode, data, new ShareListener() );
     }
 
