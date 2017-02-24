@@ -17,6 +17,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.FileInputStream;
@@ -29,8 +30,9 @@ import java.util.List;
 import java.util.UUID;
 
 public class BluetoothActivity extends AppCompatActivity implements View.OnClickListener, ListView.OnItemClickListener {
+    MusicBean CurrentItem;
     //发送的文件路径
-    private String filePath;
+   // private String filePath;
     //接收器
     protected BluetoothReceiver bluetoothReceiver = new BluetoothReceiver();
     //蓝牙适配器
@@ -51,6 +53,8 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
     boolean isBluetoothOpen;
     //列表管理器
     private Handler HandlerList = new Handler();
+    //文本视图
+    private TextView textView;
     //列表视图
     private ListView listView;
     //按钮
@@ -62,7 +66,7 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         setContentView( R.layout.activity_bluetooth );
 
         Bundle bundle = this.getIntent().getExtras();
-        filePath = bundle.getString( "filePath" );
+        CurrentItem = bundle.getParcelable( "CurrentItem" );
 
         InitLayout();
         ScanBluetooth();
@@ -123,6 +127,9 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         listView.setAdapter( arrayAdapter );
         listView.setOnItemClickListener( this );
 
+        textView = (TextView)findViewById( R.id.tvCurrentItem );
+        textView.setText( CurrentItem.getMusicName() );
+
         mbtnBack = (Button) findViewById( R.id.btnBack );
         mbtnBack.setOnClickListener( this );
         mbtnSend = (Button) findViewById( R.id.btnSend );
@@ -135,16 +142,16 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
             Toast.makeText( this, "No bluetooth device found.", Toast.LENGTH_SHORT ).show();
             return;
         }
-        if(bluetoothAdapter.isEnabled()){
-            Log.e( "Enabled","Enabled" );
-        }else{
-            bluetoothAdapter.enable();
-            Log.e( "Disabled","Disabled" );
-        }
         //打开系统的蓝牙设置
         if (!bluetoothAdapter.isEnabled()) {
             Intent intent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
             startActivityForResult( intent, REQUEST_ENABLE_BT );
+        }
+        if(bluetoothAdapter.isEnabled()){
+            Log.e( "Enabled","Enabled" );
+        }else{
+            Log.e( "Disabled","Disabled" );
+            return;
         }
         if (!isBluetoothOpen) {
             Toast.makeText( this, "Fail to start bluetooth.", Toast.LENGTH_SHORT ).show();
@@ -217,7 +224,7 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void SendData() {
-        if (filePath == null) {
+        if (CurrentItem.getMusicPath() == null) {
             Toast.makeText( this, "No file found.", Toast.LENGTH_SHORT ).show();
             return;
         }
@@ -231,7 +238,7 @@ public class BluetoothActivity extends AppCompatActivity implements View.OnClick
         InputStream inputStream = null;
         OutputStream outputStream = null;
         try {
-            inputStream = new FileInputStream( filePath );
+            inputStream = new FileInputStream( CurrentItem.getMusicPath() );
             // 获取Socket的OutputStream对象用于发送数据。
             outputStream = bluetoothSocket.getOutputStream();
         } catch (IOException e) {
