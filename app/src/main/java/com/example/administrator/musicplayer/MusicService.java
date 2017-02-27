@@ -76,7 +76,7 @@ public class MusicService extends Service {
                     Intent Intent_UpdateSeekBar = new Intent( TransportFlag.MainActivity );
                     Intent_UpdateSeekBar.putExtra( "SeekBarTo", mediaplayer.getCurrentPosition() );
                     Intent_UpdateSeekBar.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
-                    Intent_UpdateSeekBar.putExtra( TransportFlag.state, TransportFlag.SeekTo );
+                    Intent_UpdateSeekBar.putExtra( TransportFlag.State, TransportFlag.SeekTo );
                     //更新拖动条信息给Activity      测试完毕
                     sendBroadcast( Intent_UpdateSeekBar );
                     HandlerSeekbar.postDelayed( RunnableSeekbar, 1000 );
@@ -159,7 +159,7 @@ public class MusicService extends Service {
     public void sendMusicList(ArrayList<MusicBean> MusicList) {
         Intent Intent_SendMusicList = new Intent( TransportFlag.MainActivity );
         Intent_SendMusicList.putParcelableArrayListExtra( "mMusicList", MusicList );
-        Intent_SendMusicList.putExtra( TransportFlag.state, TransportFlag.LoadMusic );
+        Intent_SendMusicList.putExtra( TransportFlag.State, TransportFlag.LoadMusic );
         //将播放列表发给Service        测试完毕
         sendBroadcast( Intent_SendMusicList );
     }
@@ -206,7 +206,7 @@ public class MusicService extends Service {
 
                         Intent Intent_NextItem = new Intent( TransportFlag.MainActivity );
                         Intent_NextItem.putExtra( TransportFlag.NextItem, mMusicList.get( ItemLocationIndex ).getMusicName() );
-                        Intent_NextItem.putExtra( TransportFlag.state, TransportFlag.NextItem );
+                        Intent_NextItem.putExtra( TransportFlag.State, TransportFlag.NextItem );
                         //发送下一首给Activity用于Toast     测试完毕
                         sendBroadcast( Intent_NextItem );
                         HandlerSeekbar.postDelayed( new Runnable() {
@@ -223,7 +223,7 @@ public class MusicService extends Service {
                         Intent Intent_SeekPrepare = new Intent( TransportFlag.MainActivity );
                         Intent_SeekPrepare.putExtra( "SeekBarMax", mediaplayer.getDuration() );
                         Intent_SeekPrepare.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getDuration() ) ) );
-                        Intent_SeekPrepare.putExtra( TransportFlag.state, TransportFlag.SeekPrepare );
+                        Intent_SeekPrepare.putExtra( TransportFlag.State, TransportFlag.SeekPrepare );
                         //发送拖动条最大值和置0给Activity      测试完毕
                         sendBroadcast( Intent_SeekPrepare );
                     }
@@ -233,7 +233,7 @@ public class MusicService extends Service {
             }
             Intent Intent_CurrentItem = new Intent( TransportFlag.MainActivity );
             Intent_CurrentItem.putExtra( CurrentItem, mMusicList.get( ItemLocationIndex ) );
-            Intent_CurrentItem.putExtra( TransportFlag.state, CurrentItem );
+            Intent_CurrentItem.putExtra( TransportFlag.State, CurrentItem );
             //发送当前播放条目给Activity     测试完毕
             sendBroadcast( Intent_CurrentItem );
             HandlerPlay.post( RunnablePlay );
@@ -281,8 +281,8 @@ public class MusicService extends Service {
         public void onReceive(Context context, Intent intent) {
             String path;
             int progress;
-            state = intent.getStringExtra( TransportFlag.state );
-            Log.e( "state", state );
+            state = intent.getStringExtra( TransportFlag.State );
+            Log.e( "State", state );
             switch (state) {
                 case TransportFlag.LoadMusic:                                   //接收加载音乐           测试完毕
                     mMusicList = (ArrayList) (intent.getParcelableArrayListExtra( "mMusicList" ));

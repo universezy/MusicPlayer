@@ -1,10 +1,9 @@
 package com.example.administrator.musicplayer;
 
 public class TransportFlag {
-    public static final String state = "state";
+    public static final String State = "State";
     public static final String MainActivity = "com.example.administrator.musicplayer.MainActivity";
     public static final String MusicService = "com.example.administrator.musicplayer.MusicService";
-    public static final String BluetoothActivity = "com.example.administrator.musicplayer.BluetoothActivity";
     public static final String LoadMusic = "LoadMusic";
     public static final String PlayDefault = "PlayDefault";
     public static final String PlayList = "PlayList";

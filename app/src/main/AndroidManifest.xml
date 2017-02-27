@@ -56,10 +56,6 @@
             android:launchMode="singleTask">
         </activity>
 
-        <activity
-            android:name=".BluetoothActivity">
-        </activity>
-
         <service
             android:name="com.example.administrator.musicplayer.MusicService"
             android:enabled="true"/>
