@@ -43,9 +43,8 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.1.1'
     compile 'com.android.support:design:25.1.1'
-    testCompile 'junit:junit:4.12'
-    compile files('libs/mta-sdk-1.6.2.jar')
-    compile files('libs/open_sdk_r5781.jar')
-    compile 'com.tencent.mm.opensdk:wechat-sdk-android-with-mta:1.0.2'
+    compile 'junit:junit:4.12'
+    provided files('libs/mta-sdk-1.6.2.jar')
+    provided files('libs/open_sdk_r5781.jar')
     compile 'com.google.android.gms:play-services-appindexing:8.4.0'
 }

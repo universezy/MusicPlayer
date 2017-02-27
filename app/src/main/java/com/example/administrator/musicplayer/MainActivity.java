@@ -49,22 +49,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.example.administrator.musicplayer.TransportFlag.CurrentItem;
-import static com.example.administrator.musicplayer.TransportFlag.Exit;
-import static com.example.administrator.musicplayer.TransportFlag.Last;
-import static com.example.administrator.musicplayer.TransportFlag.LoadMusic;
-import static com.example.administrator.musicplayer.TransportFlag.Mode;
-import static com.example.administrator.musicplayer.TransportFlag.Next;
-import static com.example.administrator.musicplayer.TransportFlag.NextItem;
-import static com.example.administrator.musicplayer.TransportFlag.Pause;
-import static com.example.administrator.musicplayer.TransportFlag.Play;
-import static com.example.administrator.musicplayer.TransportFlag.PlayDefault;
-import static com.example.administrator.musicplayer.TransportFlag.PlayList;
-import static com.example.administrator.musicplayer.TransportFlag.SeekPrepare;
-import static com.example.administrator.musicplayer.TransportFlag.SeekTo;
-import static com.example.administrator.musicplayer.TransportFlag.State;
-import static com.example.administrator.musicplayer.WeChatShareUtil.weChatShareUtil;
-
 public class MainActivity extends AppCompatActivity implements
         View.OnClickListener,
         NavigationView.OnNavigationItemSelectedListener,
@@ -108,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements
     //微信API
     protected IWXAPI iwxapi;
     //微信分享工具类
-    //public WeChatShareUtil weChatShareUtil;
+    public WeChatShareUtil weChatShareUtil;
     //接收器
     protected MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
 
@@ -133,8 +117,8 @@ public class MainActivity extends AppCompatActivity implements
      *****************************************************************************************/
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate( savedInstanceState );
+    protected void onCreate(Bundle savedInstance) {
+        super.onCreate( savedInstance );
         setContentView( R.layout.activity_main );
 
         InitLayout();
@@ -245,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements
                     return;
                 }
                 Intent Intent_Last = new Intent( TransportFlag.MusicService );
-                Intent_Last.putExtra( State, Last );
+                Intent_Last.putExtra( TransportFlag.State, TransportFlag.Last );
                 sendBroadcast( Intent_Last );
                 break;
             case R.id.btnNext:          //下一首
@@ -254,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements
                     return;
                 }
                 Intent Intent_Next = new Intent( TransportFlag.MusicService );
-                Intent_Next.putExtra( State, Next );
+                Intent_Next.putExtra( TransportFlag.State, TransportFlag.Next );
                 sendBroadcast( Intent_Next );
                 break;
             case R.id.btnPlay:          //播放和暂停
@@ -318,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements
             Intent Intent_onItemClick = new Intent( TransportFlag.MusicService );
             Intent_onItemClick.putExtra( "position", position );
             Intent_onItemClick.putExtra( "path", ((MusicBean) listAdapter.getItem( position )).getMusicPath() );
-            Intent_onItemClick.putExtra( State, PlayList );
+            Intent_onItemClick.putExtra( TransportFlag.State, TransportFlag.PlayList );
             //Service播放选择条目     测试完毕
             sendBroadcast( Intent_onItemClick );
             mbtnPlay.setText( "PAUSE" );
@@ -359,8 +343,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {  //停止拖动
         Intent Intent_SeekTo = new Intent( TransportFlag.MusicService );
-        Intent_SeekTo.putExtra( SeekTo, seekBar.getProgress() );
-        Intent_SeekTo.putExtra( State, SeekTo );
+        Intent_SeekTo.putExtra( TransportFlag.SeekTo, seekBar.getProgress() );
+        Intent_SeekTo.putExtra( TransportFlag.State, TransportFlag.SeekTo );
         //Service控制播放器跳转至       测试完毕
         sendBroadcast( Intent_SeekTo );
     }
@@ -394,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements
     public void sendMusicList(ArrayList<MusicBean> MusicList) {
         Intent Intent_SendMusicList = new Intent( TransportFlag.MusicService );
         Intent_SendMusicList.putParcelableArrayListExtra( "mMusicList", MusicList );
-        Intent_SendMusicList.putExtra( State, LoadMusic );
+        Intent_SendMusicList.putExtra( TransportFlag.State, TransportFlag.LoadMusic );
         //将播放列表发给Service        测试完毕
         sendBroadcast( Intent_SendMusicList );
     }
@@ -465,8 +449,8 @@ public class MainActivity extends AppCompatActivity implements
                         mbtnMode.setText( getResources().getStringArray( R.array.play_mode )[mode] );
                         PlayMode = mode;
                         Intent Intent_PlayMode = new Intent( TransportFlag.MusicService );
-                        Intent_PlayMode.putExtra( Mode, PlayMode );
-                        Intent_PlayMode.putExtra( State, Mode );
+                        Intent_PlayMode.putExtra( TransportFlag.Mode, PlayMode );
+                        Intent_PlayMode.putExtra( TransportFlag.State, TransportFlag.Mode );
                         //将播放模式传给Service        测试完毕
                         sendBroadcast( Intent_PlayMode );
                         dialog.dismiss();
@@ -485,15 +469,15 @@ public class MainActivity extends AppCompatActivity implements
         }
         Intent Intent_PlayPause = new Intent( TransportFlag.MusicService );
         if (mtvName.getText().toString().equals( "Music Name" )) {
-            Intent_PlayPause.putExtra( State, PlayDefault );
+            Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.PlayDefault );
         } else {
             switch (mbtnPlay.getText().toString()) {
                 case "PLAY":
-                    Intent_PlayPause.putExtra( State, Play );
+                    Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.Play );
                     mbtnPlay.setText( "PAUSE" );
                     break;
                 case "PAUSE":
-                    Intent_PlayPause.putExtra( State, Pause );
+                    Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.Pause );
                     mbtnPlay.setText( "PLAY" );
                     break;
                 default:
@@ -721,7 +705,8 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void Exit() {
         Intent Intent_Exit = new Intent( TransportFlag.MusicService );
-        Intent_Exit.putExtra( State, Exit );
+        Intent_Exit.putExtra(
+                TransportFlag.State, TransportFlag.Exit );
         //发送退出信号给Service        测试完毕
         sendBroadcast( Intent_Exit );
         MainActivity.this.finish();
@@ -735,24 +720,24 @@ public class MainActivity extends AppCompatActivity implements
         public void onReceive(Context context, Intent intent) {
             int SeekBarMax, SeekBarTo;
             String strTextViewTo, strNextItem;
-            String strState = intent.getStringExtra( State );
-            Log.e( State, strState );
+            String strState = intent.getStringExtra( TransportFlag.State );
+            Log.e( TransportFlag.State, strState );
             switch (strState) {
-                case LoadMusic:                                       //接收加载音乐       测试完毕
+                case TransportFlag.LoadMusic:                                       //接收加载音乐       测试完毕
                     mMusicList = (ArrayList) (intent.getParcelableArrayListExtra( "mMusicList" ));
                     LoadMusic();
                     break;
-                case SeekTo:                                          //接收移动拖动条至    测试完毕
+                case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
                     strTextViewTo = intent.getStringExtra( "TextViewTo" );
                     seekBar.setProgress( SeekBarTo );
                     mtvCurrentProgress.setText( strTextViewTo );
                     break;
-                case NextItem:                                        //接收下一首          测试完毕
-                    strNextItem = intent.getStringExtra( NextItem );
+                case TransportFlag.NextItem:                                        //接收下一首          测试完毕
+                    strNextItem = intent.getStringExtra( TransportFlag.NextItem );
                     Toast.makeText( MainActivity.this, "Next: " + strNextItem, Toast.LENGTH_SHORT ).show();
                     break;
-                case SeekPrepare:                                     //接收播放准备        测试完毕
+                case TransportFlag.SeekPrepare:                                     //接收播放准备        测试完毕
                     SeekBarMax = intent.getIntExtra( "SeekBarMax", 0 );
                     strTextViewTo = intent.getStringExtra( "TextViewTo" );
                     seekBar.setMax( SeekBarMax );
@@ -760,8 +745,8 @@ public class MainActivity extends AppCompatActivity implements
                     mtvCurrentProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
                     mbtnPlay.setText( "PAUSE" );
                     break;
-                case CurrentItem:                                     //接收当前条目        测试完毕
-                    CurrentMusicItem = intent.getParcelableExtra( CurrentItem );
+                case TransportFlag.CurrentItem:                                     //接收当前条目        测试完毕
+                    CurrentMusicItem = intent.getParcelableExtra( TransportFlag.CurrentItem );
                     mtvName.setText( CurrentMusicItem.getMusicName() );
                 default:
                     break;
