@@ -9,7 +9,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -38,16 +40,16 @@ import android.widget.Toast;
 
 import com.tencent.connect.share.QQShare;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
-import com.tencent.mm.opensdk.modelmsg.WXMediaMessage;
-import com.tencent.mm.opensdk.modelmsg.WXWebpageObject;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
-import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 import com.tencent.tauth.Tencent;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import static com.example.administrator.musicplayer.WeChatShareUtil.weChatShareUtil;
 
 public class MainActivity extends AppCompatActivity implements
         View.OnClickListener,
@@ -113,6 +115,8 @@ public class MainActivity extends AppCompatActivity implements
     final static int ShareByQQ = 0, ShareByWechat = 1;
     //发送类型
     final static int SendByQQ = 0, SendByWechat = 2, SendByBluetooth = 2;
+    //MIME_MapTable是所有文件的后缀名所对应的MIME类型的一个String数组
+    private static final String[][] MIME_MapTable = {};
 
 
     /*****************************************************************************************
@@ -124,6 +128,8 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_main );
 
+        InitLayout();
+
         //注册接收器
         IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
         registerReceiver( mainActivityReceiver, intentFilter );
@@ -132,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements
         Intent intent = new Intent( this, MusicService.class );
         bindService( intent, serviceConnection, Context.BIND_AUTO_CREATE );
 
-        InitLayout();
+
     }
 
     @Override
@@ -274,11 +280,10 @@ public class MainActivity extends AppCompatActivity implements
         if (id == R.id.nav_shareByQQ) {                 //通过QQ分享            已实现
             ShareMusicTo( ShareByQQ );
         } else if (id == R.id.nav_shareByWechat) {      //通过微信分享          等待审核后替换appid
-            //ShareMusicTo( ShareByWechat );
-            MessageToUser();
-        } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送            未找到api
-            MessageToUser();
-            //SendMusicTo(SendByQQ);
+            ShareMusicTo( ShareByWechat );
+            //MessageToUser();
+        } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送            已实现
+            SendMusicTo( SendByQQ );
         } else if (id == R.id.nav_sendByWechat) {       //通过微信发送          等待审核后
             MessageToUser();
             //SendMusicTo(SendByWechat);
@@ -542,29 +547,30 @@ public class MainActivity extends AppCompatActivity implements
                 new Thread( new Runnable() {
                     @Override
                     public void run() {
-                        iwxapi = WXAPIFactory.createWXAPI( MainActivity.this, String.valueOf( R.string.APP_ID_WX ), true );
-                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
-                        if (!iwxapi.isWXAppInstalled()) {
-                            Toast.makeText( MainActivity.this, "You haven't install Wechat",
-                                    Toast.LENGTH_SHORT ).show();
-                            return;
-                        }
-                        WXWebpageObject webpageObject = new WXWebpageObject();
-                        webpageObject.webpageUrl = strUrl;
-                        WXMediaMessage msg = new WXMediaMessage( webpageObject );
-                        msg.title = "title";
-                        msg.description = "description";
-                        SendMessageToWX.Req req = new SendMessageToWX.Req();
-                        req.transaction = String.valueOf( System.currentTimeMillis() );
-                        req.message = msg;
-                        req.scene = SendMessageToWX.Req.WXSceneSession;
-                        iwxapi.sendReq( req );
-//                        weChatShareUtil = WeChatShareUtil.getInstance(this);
-//                        boolean result = false;
-//                        result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
-//                        if (!result) {
-//                            Toast.makeText(MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT).show();
+//                        iwxapi = WXAPIFactory.createWXAPI( MainActivity.this, String.valueOf( R.string.APP_ID_WX ), true );
+//                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
+//                        if (!iwxapi.isWXAppInstalled()) {
+//                            Toast.makeText( MainActivity.this, "You haven't install Wechat",
+//                                    Toast.LENGTH_SHORT ).show();
+//                            return;
 //                        }
+//                        WXWebpageObject webpageObject = new WXWebpageObject();
+//                        webpageObject.webpageUrl = strUrl;
+//                        WXMediaMessage msg = new WXMediaMessage( webpageObject );
+//                        msg.title = "title";
+//                        msg.description = "description";
+//                        SendMessageToWX.Req req = new SendMessageToWX.Req();
+//                        req.transaction = String.valueOf( System.currentTimeMillis() );
+//                        req.message = msg;
+//                        req.scene = SendMessageToWX.Req.WXSceneSession;
+//                        iwxapi.sendReq( req );
+                        weChatShareUtil = WeChatShareUtil.getInstance( MainActivity.this );
+                        boolean result = false;
+                        // result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
+                        result = weChatShareUtil.shareText( "test-----", SendMessageToWX.Req.WXSceneSession );
+                        if (!result) {
+                            Toast.makeText( MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT ).show();
+                        }
                     }
                 } ).start();
                 break;
@@ -583,13 +589,34 @@ public class MainActivity extends AppCompatActivity implements
             String filePath = CurrentItem.getMusicPath();
             switch (SendBy) {
                 case SendByQQ:
-
+                    File file = new File( filePath );
+                    Intent intent = new Intent(Intent.ACTION_VIEW );
+                    intent.setDataAndType(Uri.fromFile(file), "*/*");
+                    List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities(intent, 0);
+                    if (!resInfo.isEmpty()) {
+                        Intent targeted = new Intent(Intent.ACTION_SEND );
+                        for (ResolveInfo info : resInfo) {
+                            targeted.putExtra( Intent.EXTRA_STREAM, Uri.fromFile( file ) );
+                            targeted.setType( "*/*" );
+                            ActivityInfo activityInfo = info.activityInfo;
+                            if (activityInfo.packageName.contains("com.tencent.mobileqq")) {
+                                targeted.setPackage(activityInfo.packageName);
+                                break;
+                            }
+                        }
+                        if (targeted != null){
+                            Intent chooserIntent = Intent.createChooser(targeted, "Send to QQ :");
+                            startActivity(chooserIntent);
+                        }else {
+                            Toast.makeText(MainActivity.this, "No program to choose.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
                     break;
                 case SendByBluetooth:
                     Intent intent_SendByBluetooth = new Intent( MainActivity.this, BluetoothActivity.class );
                     //用Bundle携带数据
                     Bundle bundle = new Bundle();
-                    bundle.putParcelable( "CurrentItem",CurrentItem );
+                    bundle.putParcelable( "CurrentItem", CurrentItem );
                     intent_SendByBluetooth.putExtras( bundle );
                     startActivity( intent_SendByBluetooth );
                     break;
