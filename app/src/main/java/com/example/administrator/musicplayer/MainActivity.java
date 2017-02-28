@@ -120,14 +120,6 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate( savedInstance );
         setContentView( R.layout.welcome );
 
-        HandlerMain.postDelayed( new Runnable() {
-            @Override
-            public void run() {
-                setContentView( R.layout.activity_main );
-                InitLayout();
-            }
-        }, 3000 );
-
         //注册接收器
         IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
         registerReceiver( mainActivityReceiver, intentFilter );
@@ -208,6 +200,8 @@ public class MainActivity extends AppCompatActivity implements
         //设置导航视图
         navigationView = (NavigationView) findViewById( R.id.nav_view );
         navigationView.setNavigationItemSelectedListener( this );
+
+        
     }
 
     /*****************************************************************************************
@@ -732,6 +726,13 @@ public class MainActivity extends AppCompatActivity implements
                 case TransportFlag.LoadMusic:                                       //接收加载音乐       测试完毕
                     mMusicList = (ArrayList) (intent.getParcelableArrayListExtra( "mMusicList" ));
                     CurrentMusicItem = mMusicList.get( 0 );
+                    HandlerMain.postDelayed( new Runnable() {
+                        @Override
+                        public void run() {
+                            setContentView( R.layout.activity_main );
+                            InitLayout();
+                        }
+                    },3000);
                     break;
                 case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );

@@ -21,11 +21,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 
-import static com.example.administrator.musicplayer.TransportFlag.CurrentItem;
-
 public class MusicService extends Service {
     boolean mAllowRebind;       // indicates whether onRebind should be used
-
     //媒体播放器
     private MediaPlayer mediaplayer = new MediaPlayer();
     //播放列表
@@ -36,18 +33,14 @@ public class MusicService extends Service {
     private int[] PlayArray;
     //播放顺序数组索引
     private int PlayArrayIndex;
-    //播放管理器
-    private Handler HandlerPlay = new Handler();
-    //拖动条管理器
-    private Handler HandlerSeekbar = new Handler();
+    //处理器
+    private Handler HandlerService = new Handler();
     //播放线程
     private Runnable RunnablePlay;
     //拖动条线程
     private Runnable RunnableSeekbar;
     //接收器
     protected MusicServiceReceiver musicServiceReceiver = new MusicServiceReceiver();
-    //服务状态
-    private String state;
     //播放模式序号
     private int mode;
 
@@ -64,7 +57,7 @@ public class MusicService extends Service {
             @Override
             public void run() {
                 mediaplayer.start();
-                HandlerSeekbar.post( RunnableSeekbar );
+                HandlerService.post( RunnableSeekbar );
             }
         };
 
@@ -79,7 +72,7 @@ public class MusicService extends Service {
                     Intent_UpdateSeekBar.putExtra( TransportFlag.State, TransportFlag.SeekTo );
                     //更新拖动条信息给Activity      测试完毕
                     sendBroadcast( Intent_UpdateSeekBar );
-                    HandlerSeekbar.postDelayed( RunnableSeekbar, 1000 );
+                    HandlerService.postDelayed( RunnableSeekbar, 1000 );
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -115,7 +108,7 @@ public class MusicService extends Service {
         mediaplayer.stop();
         mediaplayer.release();
         //将线程销毁掉
-        HandlerSeekbar.removeCallbacks( RunnableSeekbar );
+        HandlerService.removeCallbacks( RunnableSeekbar );
         unregisterReceiver( musicServiceReceiver );
         super.onDestroy();
     }
@@ -160,7 +153,7 @@ public class MusicService extends Service {
         Intent Intent_SendMusicList = new Intent( TransportFlag.MainActivity );
         Intent_SendMusicList.putParcelableArrayListExtra( "mMusicList", MusicList );
         Intent_SendMusicList.putExtra( TransportFlag.State, TransportFlag.LoadMusic );
-        //将播放列表发给Service        测试完毕
+        //将播放列表发给Activity        测试完毕
         sendBroadcast( Intent_SendMusicList );
     }
 
@@ -191,7 +184,7 @@ public class MusicService extends Service {
      **/
     public void playMusic(String path) {
         if (path != null) {
-            HandlerSeekbar.removeCallbacks( RunnableSeekbar );
+            HandlerService.removeCallbacks( RunnableSeekbar );
             try {
                 mediaplayer.reset();
                 mediaplayer.setDataSource( path );
@@ -209,7 +202,7 @@ public class MusicService extends Service {
                         Intent_NextItem.putExtra( TransportFlag.State, TransportFlag.NextItem );
                         //发送下一首给Activity用于Toast     测试完毕
                         sendBroadcast( Intent_NextItem );
-                        HandlerSeekbar.postDelayed( new Runnable() {
+                        HandlerService.postDelayed( new Runnable() {
                             @Override
                             public void run() {
                                 playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
@@ -232,11 +225,11 @@ public class MusicService extends Service {
                 e.printStackTrace();
             }
             Intent Intent_CurrentItem = new Intent( TransportFlag.MainActivity );
-            Intent_CurrentItem.putExtra( CurrentItem, mMusicList.get( ItemLocationIndex ) );
-            Intent_CurrentItem.putExtra( TransportFlag.State, CurrentItem );
+            Intent_CurrentItem.putExtra( TransportFlag.CurrentItem, mMusicList.get( ItemLocationIndex ) );
+            Intent_CurrentItem.putExtra( TransportFlag.State, TransportFlag.CurrentItem );
             //发送当前播放条目给Activity     测试完毕
             sendBroadcast( Intent_CurrentItem );
-            HandlerPlay.post( RunnablePlay );
+            HandlerService.post( RunnablePlay );
         }
     }
 
@@ -281,8 +274,8 @@ public class MusicService extends Service {
         public void onReceive(Context context, Intent intent) {
             String path;
             int progress;
-            state = intent.getStringExtra( TransportFlag.State );
-            Log.e( "State", state );
+            String state = intent.getStringExtra( TransportFlag.State );
+            Log.e( TransportFlag.State, state );
             switch (state) {
                 case TransportFlag.LoadMusic:                                   //接收加载音乐           测试完毕
                     mMusicList = (ArrayList) (intent.getParcelableArrayListExtra( "mMusicList" ));

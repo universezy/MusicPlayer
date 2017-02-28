@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/content_main"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.example.administrator.musicplayer.MainActivity"
-    tools:showIn="@layout/activity_main">
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:id="@+id/content_main"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              app:layout_behavior="@string/appbar_scrolling_view_behavior"
+              tools:context="com.example.administrator.musicplayer.MainActivity"
+              tools:showIn="@layout/activity_main">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0">
+
         <EditText
             android:id="@+id/etClearFocus"
             android:layout_width="match_parent"
@@ -26,8 +27,8 @@
         android:layout_height="0dp"
         android:layout_weight="10"
         android:background="@color/silver"
-        android:orientation="horizontal"
-        android:focusable="false">
+        android:focusable="false"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btnMore"
@@ -35,7 +36,7 @@
             android:layout_height="match_parent"
             android:layout_weight="15"
             android:text="MORE"
-            android:textSize="10dp" />
+            android:textSize="10dp"/>
 
         <SearchView
             android:id="@+id/svSearch"
@@ -53,7 +54,7 @@
             android:layout_height="match_parent"
             android:layout_weight="15"
             android:text="MODE"
-            android:textSize="10sp" />
+            android:textSize="10sp"/>
     </LinearLayout>
 
     <TextView
@@ -65,7 +66,7 @@
         android:gravity="center"
         android:text="Music Name"
         android:textColor="@color/blue"
-        android:textSize="20dp" />
+        android:textSize="20dp"/>
 
     <ListView
         android:id="@+id/lvList"
@@ -77,7 +78,7 @@
         android:gravity="center"
         android:text="List"
         android:textColor="@color/black"
-        android:textSize="20dp" />
+        android:textSize="20dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -90,8 +91,8 @@
             android:id="@+id/tvCurrentProgress"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:gravity="center"
             android:layout_weight="1.5"
+            android:gravity="center"
             android:text="Current Progress"
             android:textColor="@color/black"
             android:textSize="10dp"/>
@@ -108,14 +109,13 @@
             android:id="@+id/tvTotalProgress"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:gravity="center"
             android:layout_weight="1.5"
+            android:gravity="center"
             android:text="Total Progress"
             android:textColor="@color/black"
             android:textSize="10dp"/>
 
     </LinearLayout>
-
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -125,10 +125,10 @@
         android:orientation="horizontal">
 
         <View
+            android:id="@+id/view"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3"
-            android:id="@+id/view" />
+            android:layout_weight="3"/>
 
         <Button
             android:id="@+id/btnLast"
@@ -136,14 +136,15 @@
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
             android:layout_weight="3"
-            android:background="@color/red"
+            android:background="@color/white"
             android:text="LAST"
-            android:textSize="20dp" />
+            android:textColor="@color/black"
+            android:textSize="20dp"/>
 
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="1"/>
 
         <Button
             android:id="@+id/btnPlay"
@@ -151,14 +152,15 @@
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
             android:layout_weight="3"
-            android:background="@color/red"
+            android:background="@color/white"
             android:text="PLAY"
-            android:textSize="20dp" />
+            android:textColor="@color/black"
+            android:textSize="20dp"/>
 
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="1"/>
 
         <Button
             android:id="@+id/btnNext"
@@ -166,13 +168,14 @@
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
             android:layout_weight="3"
-            android:background="@color/red"
+            android:background="@color/white"
             android:text="NEXT"
-            android:textSize="20dp" />
+            android:textColor="@color/black"
+            android:textSize="20dp"/>
 
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3" />
+            android:layout_weight="3"/>
     </LinearLayout>
 </LinearLayout>
