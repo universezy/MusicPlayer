@@ -63,15 +63,15 @@ public class MainActivity extends AppCompatActivity implements
      * 布局组件
      **/
     //按钮
-    private Button mbtnMore, mbtnMode, mbtnLast, mbtnNext, mbtnPlay;
+    public Button mbtnMore, mbtnMode, mbtnLast, mbtnNext, mbtnPlay;
     //搜索视图
     private SearchView searchView;
     //文本视图
-    private TextView mtvName, mtvCurrentProgress, mtvTotalProgress;
+    public TextView mtvName, mtvCurrentProgress, mtvTotalProgress;
     //列表视图
     private ListView listView;
     //拖动条
-    private SeekBar seekBar;
+    public SeekBar seekBar;
     //抽屉布局
     private DrawerLayout drawerLayout;
     //导航视图
@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 自定义元素
      **/
+    public static MainActivity mainActivity;
     //播放列表
     private ArrayList<MusicBean> mMusicList = new ArrayList<>();
     //搜索列表
@@ -118,10 +119,16 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstance) {
         super.onCreate( savedInstance );
-        setContentView( R.layout.welcome );
+        setContentView( R.layout.activity_main );
+        this.mainActivity = this;
+
+        findViewById( R.id.switch_main ).setVisibility( View.GONE );
+        //设置抽屉视图关闭手势滑动
+        drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
+        drawerLayout.setDrawerLockMode( DrawerLayout.LOCK_MODE_LOCKED_CLOSED );
 
         //注册接收器
-        IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
+        IntentFilter intentFilter = new IntentFilter( TransportFlag.MusicService );
         registerReceiver( mainActivityReceiver, intentFilter );
 
         //绑定服务
@@ -177,11 +184,9 @@ public class MainActivity extends AppCompatActivity implements
         seekBar = (SeekBar) findViewById( R.id.sb );
         seekBar.setOnSeekBarChangeListener( this );
 
-        //设置抽屉视图
-        drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
-
         //设置文本视图
         mtvName = (TextView) findViewById( R.id.tvName );
+        mtvName.setOnClickListener( this );
         mtvCurrentProgress = (TextView) findViewById( R.id.tvCurrentProgress );
         mtvTotalProgress = (TextView) findViewById( R.id.tvTotalProgress );
 
@@ -200,8 +205,6 @@ public class MainActivity extends AppCompatActivity implements
         //设置导航视图
         navigationView = (NavigationView) findViewById( R.id.nav_view );
         navigationView.setNavigationItemSelectedListener( this );
-
-        
     }
 
     /*****************************************************************************************
@@ -215,6 +218,10 @@ public class MainActivity extends AppCompatActivity implements
     public void onClick(View v) {
         searchView.clearFocus();
         switch (v.getId()) {
+            case R.id.tvName:
+                Intent intent_LyricActivity = new Intent( MainActivity.this, LyricActivity.class );
+                startActivity( intent_LyricActivity );
+                break;
             case R.id.btnMore:          //扩展
                 if (!drawerLayout.isDrawerOpen( GravityCompat.START )) {
                     drawerLayout.openDrawer( GravityCompat.START );
@@ -224,22 +231,10 @@ public class MainActivity extends AppCompatActivity implements
                 setPlayMode();
                 break;
             case R.id.btnLast:          //上一首
-                if (mMusicList == null || mMusicList.size() == 0) {
-                    Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
-                    return;
-                }
-                Intent Intent_Last = new Intent( TransportFlag.MusicService );
-                Intent_Last.putExtra( TransportFlag.State, TransportFlag.Last );
-                sendBroadcast( Intent_Last );
+                LastItem();
                 break;
             case R.id.btnNext:          //下一首
-                if (mMusicList == null || mMusicList.size() == 0) {
-                    Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
-                    return;
-                }
-                Intent Intent_Next = new Intent( TransportFlag.MusicService );
-                Intent_Next.putExtra( TransportFlag.State, TransportFlag.Next );
-                sendBroadcast( Intent_Next );
+                NextItem();
                 break;
             case R.id.btnPlay:          //播放和暂停
                 Play_Pause();
@@ -299,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         searchView.clearFocus();
         if ((listAdapter.getItem( position )) != null) {
-            Intent Intent_onItemClick = new Intent( TransportFlag.MusicService );
+            Intent Intent_onItemClick = new Intent( TransportFlag.MainActivity );
             Intent_onItemClick.putExtra( "position", position );
             Intent_onItemClick.putExtra( "path", ((MusicBean) listAdapter.getItem( position )).getMusicPath() );
             Intent_onItemClick.putExtra( TransportFlag.State, TransportFlag.PlayList );
@@ -342,11 +337,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {  //停止拖动
-        Intent Intent_SeekTo = new Intent( TransportFlag.MusicService );
-        Intent_SeekTo.putExtra( TransportFlag.SeekTo, seekBar.getProgress() );
-        Intent_SeekTo.putExtra( TransportFlag.State, TransportFlag.SeekTo );
-        //Service控制播放器跳转至       测试完毕
-        sendBroadcast( Intent_SeekTo );
+        UpdateSeekbar( seekBar );
     }
 
     /*****************************************************************************************
@@ -371,7 +362,7 @@ public class MainActivity extends AppCompatActivity implements
      * 发送列表给Service
      **/
     public void sendMusicList(ArrayList<MusicBean> MusicList) {
-        Intent Intent_SendMusicList = new Intent( TransportFlag.MusicService );
+        Intent Intent_SendMusicList = new Intent( TransportFlag.MainActivity );
         Intent_SendMusicList.putParcelableArrayListExtra( "mMusicList", MusicList );
         Intent_SendMusicList.putExtra( TransportFlag.State, TransportFlag.LoadMusic );
         //将播放列表发给Service        测试完毕
@@ -443,7 +434,7 @@ public class MainActivity extends AppCompatActivity implements
                     public void onClick(DialogInterface dialog, int which) {
                         mbtnMode.setText( getResources().getStringArray( R.array.play_mode )[mode] );
                         PlayMode = mode;
-                        Intent Intent_PlayMode = new Intent( TransportFlag.MusicService );
+                        Intent Intent_PlayMode = new Intent( TransportFlag.MainActivity );
                         Intent_PlayMode.putExtra( TransportFlag.Mode, PlayMode );
                         Intent_PlayMode.putExtra( TransportFlag.State, TransportFlag.Mode );
                         //将播放模式传给Service        测试完毕
@@ -455,6 +446,32 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
+     * 上一首
+     **/
+    public void LastItem() {
+        if (mMusicList == null || mMusicList.size() == 0) {
+            Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+            return;
+        }
+        Intent Intent_Last = new Intent( TransportFlag.MainActivity );
+        Intent_Last.putExtra( TransportFlag.State, TransportFlag.Last );
+        sendBroadcast( Intent_Last );
+    }
+
+    /**
+     * 下一首
+     **/
+    public void NextItem() {
+        if (mMusicList == null || mMusicList.size() == 0) {
+            Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+            return;
+        }
+        Intent Intent_Next = new Intent( TransportFlag.MainActivity );
+        Intent_Next.putExtra( TransportFlag.State, TransportFlag.Next );
+        sendBroadcast( Intent_Next );
+    }
+
+    /**
      * 播放和暂停切换
      **/
     public void Play_Pause() {
@@ -462,7 +479,7 @@ public class MainActivity extends AppCompatActivity implements
             Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
             return;
         }
-        Intent Intent_PlayPause = new Intent( TransportFlag.MusicService );
+        Intent Intent_PlayPause = new Intent( TransportFlag.MainActivity );
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.PlayDefault );
         } else {
@@ -481,6 +498,17 @@ public class MainActivity extends AppCompatActivity implements
         }
         //Service播放或者暂停播放器      测试完毕
         sendBroadcast( Intent_PlayPause );
+    }
+
+    /**
+     * 发送更新拖动条给Service
+     **/
+    public void UpdateSeekbar(SeekBar seekBar) {
+        Intent Intent_SeekTo = new Intent( TransportFlag.MainActivity );
+        Intent_SeekTo.putExtra( TransportFlag.SeekTo, seekBar.getProgress() );
+        Intent_SeekTo.putExtra( TransportFlag.State, TransportFlag.SeekTo );
+        //Service控制播放器跳转至       测试完毕
+        sendBroadcast( Intent_SeekTo );
     }
 
     /**
@@ -657,7 +685,6 @@ public class MainActivity extends AppCompatActivity implements
                         newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
                     }
                     final Uri NewUri = newUri;
-                    //  Looper.prepare();
                     new AlertDialog.Builder( MainActivity.this )
                             .setTitle( "Are you sure to set the music as ringtone ?" )
                             .setMessage( RingtoneManager.getRingtone( MainActivity.this, NewUri ).getTitle( MainActivity.this ) )
@@ -675,7 +702,6 @@ public class MainActivity extends AppCompatActivity implements
                                     dialog.dismiss();
                                 }
                             } ).show();
-                    // Looper.loop();
                 }
             } );
         }
@@ -729,10 +755,11 @@ public class MainActivity extends AppCompatActivity implements
                     HandlerMain.postDelayed( new Runnable() {
                         @Override
                         public void run() {
-                            setContentView( R.layout.activity_main );
+                            findViewById( R.id.switch_welcome ).setVisibility( View.GONE );
+                            findViewById( R.id.switch_main ).setVisibility( View.VISIBLE );
                             InitLayout();
                         }
-                    },3000);
+                    }, 3000 );
                     break;
                 case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
