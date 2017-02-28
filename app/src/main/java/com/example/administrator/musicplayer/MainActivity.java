@@ -18,7 +18,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -83,8 +82,8 @@ public class MainActivity extends AppCompatActivity implements
      **/
     //绑定对象
     protected MusicService.ServiceBinder binder;
-    //列表管理器
-    private Handler HandlerList = new Handler();
+    //处理器
+    private Handler HandlerMain = new Handler();
     //音乐列表适配器
     private ListAdapter listAdapter;
     //QQAPI
@@ -119,9 +118,15 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstance) {
         super.onCreate( savedInstance );
-        setContentView( R.layout.activity_main );
+        setContentView( R.layout.welcome );
 
-        InitLayout();
+        HandlerMain.postDelayed( new Runnable() {
+            @Override
+            public void run() {
+                setContentView( R.layout.activity_main );
+                InitLayout();
+            }
+        }, 3000 );
 
         //注册接收器
         IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
@@ -162,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements
     public void InitLayout() {
         //设置列表适配器
         listAdapter = new ListAdapter( getApplicationContext(), R.layout.item_music_list_layout );
+        listAdapter.setList( mMusicList );
 
         //设置列表视图
         listView = (ListView) findViewById( R.id.lvList );
@@ -357,19 +363,14 @@ public class MainActivity extends AppCompatActivity implements
      * 载入歌曲
      **/
     public void LoadMusic() {
-        new Thread( new Runnable() {
+        HandlerMain.post( new Runnable() {
             @Override
             public void run() {
-                HandlerList.post( new Runnable() {
-                    @Override
-                    public void run() {
-                        listAdapter.setList( mMusicList );
-                        listAdapter.notifyDataSetChanged();
-                        CurrentMusicItem = mMusicList.get( 0 );
-                    }
-                } );
+                listAdapter.setList( mMusicList );
+                listView.setAdapter( listAdapter );
+                CurrentMusicItem = mMusicList.get( 0 );
             }
-        } ).start();
+        } );
     }
 
     /**
@@ -515,7 +516,7 @@ public class MainActivity extends AppCompatActivity implements
                 .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ).replaceAll( " ", "%20" );
         switch (ShareBy) {
             case ShareByQQ:
-                new Thread( new Runnable() {
+                HandlerMain.post( new Runnable() {
                     @Override
                     public void run() {
                         tencent = Tencent.createInstance( String.valueOf( R.string.APP_ID_QQ ), MainActivity.this );
@@ -528,10 +529,10 @@ public class MainActivity extends AppCompatActivity implements
                         params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
                         tencent.shareToQQ( MainActivity.this, params, new ShareListener() );
                     }
-                } ).start();
+                } );
                 break;
             case ShareByWechat:
-                new Thread( new Runnable() {
+                HandlerMain.post( new Runnable() {
                     @Override
                     public void run() {
 //                        iwxapi = WXAPIFactory.createWXAPI( MainActivity.this, String.valueOf( R.string.APP_ID_WX ), true );
@@ -552,14 +553,14 @@ public class MainActivity extends AppCompatActivity implements
 //                        req.scene = SendMessageToWX.Req.WXSceneSession;
 //                        iwxapi.sendReq( req );
                         weChatShareUtil = WeChatShareUtil.getInstance( MainActivity.this );
-                        boolean result = false;
+                        boolean result;
                         // result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
                         result = weChatShareUtil.shareText( "test-----", SendMessageToWX.Req.WXSceneSession );
                         if (!result) {
                             Toast.makeText( MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT ).show();
                         }
                     }
-                } ).start();
+                } );
                 break;
             default:
                 break;
@@ -569,59 +570,64 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 发送音乐
      **/
-    public void SendMusicTo(int SendBy) {
+    public void SendMusicTo(final int SendBy) {
         if (mtvName.getText().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
         } else {
-            String filePath = CurrentMusicItem.getMusicPath();
-            File file = new File( filePath );
-            Intent Intent_target = new Intent( Intent.ACTION_SEND );
-            Intent_target.putExtra( Intent.EXTRA_STREAM, Uri.fromFile( file ) );
-            Intent_target.setType( "*/*" );
-            List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities( Intent_target, 0 );
-            if (!resInfo.isEmpty()) {
-                boolean isTargetExit = false;
-                switch (SendBy) {
-                    case SendByQQ:
-                        for (ResolveInfo info : resInfo) {
-                            ActivityInfo activityInfo = info.activityInfo;
-                            if (activityInfo.packageName.contains( "com.tencent.mobileqq" )) {
-                                Intent_target.setPackage( activityInfo.packageName );
-                                isTargetExit = true;
+            HandlerMain.post( new Runnable() {
+                @Override
+                public void run() {
+                    String filePath = CurrentMusicItem.getMusicPath();
+                    File file = new File( filePath );
+                    Intent Intent_target = new Intent( Intent.ACTION_SEND );
+                    Intent_target.putExtra( Intent.EXTRA_STREAM, Uri.fromFile( file ) );
+                    Intent_target.setType( "*/*" );
+                    List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities( Intent_target, 0 );
+                    if (!resInfo.isEmpty()) {
+                        boolean isTargetExit = false;
+                        switch (SendBy) {
+                            case SendByQQ:
+                                for (ResolveInfo info : resInfo) {
+                                    ActivityInfo activityInfo = info.activityInfo;
+                                    if (activityInfo.packageName.contains( "com.tencent.mobileqq" )) {
+                                        Intent_target.setPackage( activityInfo.packageName );
+                                        isTargetExit = true;
+                                        break;
+                                    }
+                                }
                                 break;
-                            }
-                        }
-                        break;
-                    case SendByWechat:
-                        for (ResolveInfo info : resInfo) {
-                            ActivityInfo activityInfo = info.activityInfo;
-                            if (activityInfo.name.contains( "com.tencent.mm.ui.tools.ShareImgUI" )) {
-                                Intent_target.setClassName( activityInfo.packageName, activityInfo.name );
-                                isTargetExit = true;
+                            case SendByWechat:
+                                for (ResolveInfo info : resInfo) {
+                                    ActivityInfo activityInfo = info.activityInfo;
+                                    if (activityInfo.name.contains( "com.tencent.mm.ui.tools.ShareImgUI" )) {
+                                        Intent_target.setClassName( activityInfo.packageName, activityInfo.name );
+                                        isTargetExit = true;
+                                        break;
+                                    }
+                                }
                                 break;
-                            }
-                        }
-                        break;
-                    case SendByBluetooth:
-                        for (ResolveInfo info : resInfo) {
-                            ActivityInfo activityInfo = info.activityInfo;
-                            if (activityInfo.packageName.contains( "com.android.bluetooth" )) {
-                                Intent_target.setPackage( activityInfo.packageName );
-                                isTargetExit = true;
+                            case SendByBluetooth:
+                                for (ResolveInfo info : resInfo) {
+                                    ActivityInfo activityInfo = info.activityInfo;
+                                    if (activityInfo.packageName.contains( "com.android.bluetooth" )) {
+                                        Intent_target.setPackage( activityInfo.packageName );
+                                        isTargetExit = true;
+                                        break;
+                                    }
+                                }
                                 break;
-                            }
+                            default:
+                                break;
                         }
-                        break;
-                    default:
-                        break;
+                        if (isTargetExit) {
+                            Intent Intent_chooser = Intent.createChooser( Intent_target, "Send Music :" );
+                            startActivity( Intent_chooser );
+                        } else {
+                            Toast.makeText( MainActivity.this, "No program to choose.", Toast.LENGTH_SHORT ).show();
+                        }
+                    }
                 }
-                if (isTargetExit) {
-                    Intent Intent_chooser = Intent.createChooser( Intent_target, "Send Music :" );
-                    startActivity( Intent_chooser );
-                } else {
-                    Toast.makeText( MainActivity.this, "No program to choose.", Toast.LENGTH_SHORT ).show();
-                }
-            }
+            } );
         }
     }
 
@@ -632,7 +638,7 @@ public class MainActivity extends AppCompatActivity implements
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
         } else {
-            new Thread( new Runnable() {
+            HandlerMain.post( new Runnable() {
                 @Override
                 public void run() {
                     File file = new File( CurrentMusicItem.getMusicPath() );
@@ -657,7 +663,7 @@ public class MainActivity extends AppCompatActivity implements
                         newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
                     }
                     final Uri NewUri = newUri;
-                    Looper.prepare();
+                    //  Looper.prepare();
                     new AlertDialog.Builder( MainActivity.this )
                             .setTitle( "Are you sure to set the music as ringtone ?" )
                             .setMessage( RingtoneManager.getRingtone( MainActivity.this, NewUri ).getTitle( MainActivity.this ) )
@@ -675,9 +681,9 @@ public class MainActivity extends AppCompatActivity implements
                                     dialog.dismiss();
                                 }
                             } ).show();
-                    Looper.loop();
+                    // Looper.loop();
                 }
-            } ).start();
+            } );
         }
     }
 
@@ -725,7 +731,7 @@ public class MainActivity extends AppCompatActivity implements
             switch (strState) {
                 case TransportFlag.LoadMusic:                                       //接收加载音乐       测试完毕
                     mMusicList = (ArrayList) (intent.getParcelableArrayListExtra( "mMusicList" ));
-                    LoadMusic();
+                    CurrentMusicItem = mMusicList.get( 0 );
                     break;
                 case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
