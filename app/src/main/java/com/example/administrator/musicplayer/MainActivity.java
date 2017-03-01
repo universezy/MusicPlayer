@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements
     //搜索列表
     private ArrayList<MusicBean> mSearchList = new ArrayList<>();
     //当前播放条目
-    private MusicBean CurrentMusicItem;
+    public MusicBean CurrentMusicItem;
     //播放模式序号
     private int PlayMode = 0, mode = 0;
     //分享类型
@@ -363,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void sendMusicList(ArrayList<MusicBean> MusicList) {
         Intent Intent_SendMusicList = new Intent( TransportFlag.MainActivity );
-        Intent_SendMusicList.putParcelableArrayListExtra( "mMusicList", MusicList );
+        Intent_SendMusicList.putExtra( "mMusicList", MusicList );
         Intent_SendMusicList.putExtra( TransportFlag.State, TransportFlag.LoadMusic );
         //将播放列表发给Service        测试完毕
         sendBroadcast( Intent_SendMusicList );
@@ -731,8 +731,7 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void Exit() {
         Intent Intent_Exit = new Intent( TransportFlag.MusicService );
-        Intent_Exit.putExtra(
-                TransportFlag.State, TransportFlag.Exit );
+        Intent_Exit.putExtra( TransportFlag.State, TransportFlag.Exit );
         //发送退出信号给Service        测试完毕
         sendBroadcast( Intent_Exit );
         MainActivity.this.finish();
@@ -750,7 +749,7 @@ public class MainActivity extends AppCompatActivity implements
             Log.e( TransportFlag.State, strState );
             switch (strState) {
                 case TransportFlag.LoadMusic:                                       //接收加载音乐       测试完毕
-                    mMusicList = (ArrayList) (intent.getParcelableArrayListExtra( "mMusicList" ));
+                    mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));
                     CurrentMusicItem = mMusicList.get( 0 );
                     HandlerMain.postDelayed( new Runnable() {
                         @Override
@@ -780,8 +779,9 @@ public class MainActivity extends AppCompatActivity implements
                     mbtnPlay.setText( "PAUSE" );
                     break;
                 case TransportFlag.CurrentItem:                                     //接收当前条目        测试完毕
-                    CurrentMusicItem = intent.getParcelableExtra( TransportFlag.CurrentItem );
+                    CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.CurrentItem );
                     mtvName.setText( CurrentMusicItem.getMusicName() );
+                    break;
                 default:
                     break;
             }
