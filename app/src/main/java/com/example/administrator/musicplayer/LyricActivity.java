@@ -4,6 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -27,7 +30,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     //按钮
     private Button mbtnBack, mbtnMode, mbtnLast, mbtnNext, mbtnPlay;
     //文本视图
-    private TextView mtvName,mtvArtist,mtvAlbum, mtvCurrentProgress, mtvTotalProgress;
+    private TextView mtvName, mtvArtist, mtvAlbum, mtvCurrentProgress, mtvTotalProgress;
     //视图
     private View view;
     //拖动条
@@ -74,7 +77,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
         //设置文本视图
         mtvName = (TextView) findViewById( R.id.tvName );
         mtvArtist = (TextView) findViewById( R.id.tvArtist );
-        mtvAlbum = (TextView) findViewById( R.id.tvAlbum  );
+        mtvAlbum = (TextView) findViewById( R.id.tvAlbum );
         mtvCurrentProgress = (TextView) findViewById( R.id.tvCurrentProgress );
         mtvTotalProgress = (TextView) findViewById( R.id.tvTotalProgress );
 
@@ -159,11 +162,28 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 seekBar.setMax( mainActivity.seekBar.getMax() );
                 mbtnPlay.setText( mainActivity.mbtnPlay.getText() );
                 CurrentMusicItem = mainActivity.CurrentMusicItem;
-                mtvName.setText("Name : "+ CurrentMusicItem.getMusicName() );
-                mtvArtist.setText("Artist : "+ CurrentMusicItem.getMusicArtist() );
-                mtvAlbum.setText("Album : "+ CurrentMusicItem.getMusicAlbum() );
+                mtvName.setText( "Name : " + CurrentMusicItem.getMusicName() );
+                mtvArtist.setText( "Artist : " + CurrentMusicItem.getMusicArtist() );
+                mtvAlbum.setText( "Album : " + CurrentMusicItem.getMusicAlbum() );
+                LyricParsing lyricParsing = new LyricParsing( CurrentMusicItem.getMusicName() );
+                Draw();
             }
         } ).start();
+    }
+
+    /**
+     * 绘图
+     **/
+    public void Draw() {
+        Log.e( "Start drawing:", "-----------------" );
+        Canvas canvas = new Canvas();
+        Paint paint = new Paint();
+        paint.setColor( Color.BLUE );
+        paint.setAntiAlias( true );
+        paint.setTextSize( 1000 );
+        canvas.drawText( "applegrehjtrjqhqgr", 60, 60, paint );
+        canvas.drawCircle( 100, 100, 400, paint );
+        view.draw( canvas );
     }
 
     /**
@@ -175,7 +195,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
             int SeekBarMax, SeekBarTo;
             String strTextViewTo, strNextItem;
             String strState = intent.getStringExtra( TransportFlag.State );
-            Log.e( TransportFlag.State, strState );
+            //Log.e( TransportFlag.State, strState );
             switch (strState) {
                 case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
@@ -192,7 +212,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                     mbtnPlay.setText( "PAUSE" );
                     break;
                 case TransportFlag.CurrentItem:                                     //接收当前条目        测试完毕
-                    CurrentMusicItem =(MusicBean) intent.getSerializableExtra( TransportFlag.CurrentItem );
+                    CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.CurrentItem );
                     mtvName.setText( CurrentMusicItem.getMusicName() );
                 default:
                     break;

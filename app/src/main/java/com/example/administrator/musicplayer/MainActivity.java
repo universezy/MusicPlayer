@@ -746,7 +746,7 @@ public class MainActivity extends AppCompatActivity implements
             int SeekBarMax, SeekBarTo;
             String strTextViewTo, strNextItem;
             String strState = intent.getStringExtra( TransportFlag.State );
-            Log.e( TransportFlag.State, strState );
+           // Log.e( TransportFlag.State, strState );
             switch (strState) {
                 case TransportFlag.LoadMusic:                                       //接收加载音乐       测试完毕
                     mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));
