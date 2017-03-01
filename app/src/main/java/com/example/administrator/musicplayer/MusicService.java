@@ -23,16 +23,11 @@ import java.util.Random;
 
 public class MusicService extends Service {
     boolean mAllowRebind;       // indicates whether onRebind should be used
+    /**
+     * 工具实例
+     **/
     //媒体播放器
     private MediaPlayer mediaplayer = new MediaPlayer();
-    //播放列表
-    public ArrayList<MusicBean> mMusicList = new ArrayList<>();
-    //播放列表索引
-    public int ItemLocationIndex;
-    //播放顺序数组
-    private int[] PlayArray;
-    //播放顺序数组索引
-    private int PlayArrayIndex;
     //处理器
     private Handler HandlerService = new Handler();
     //播放线程
@@ -41,15 +36,31 @@ public class MusicService extends Service {
     private Runnable RunnableSeekbar;
     //接收器
     protected MusicServiceReceiver musicServiceReceiver = new MusicServiceReceiver();
+
+    /**
+     * 自定义元素
+     **/
+    //播放列表
+    public ArrayList<MusicBean> mMusicList = new ArrayList<>();
+    //播放列表索引
+    public int ItemLocationIndex;
+    //播放顺序数组
+    private int[] PlayArray;
+    //播放顺序数组索引
+    private int PlayArrayIndex;
     //播放模式序号
     private int mode;
+
+    /*****************************************************************************************
+     * *************************************    分割线    **************************************
+     *****************************************************************************************/
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         //注册接收器
-        IntentFilter intentFilter = new IntentFilter( TransportFlag.MusicService );
+        IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
         registerReceiver( musicServiceReceiver, intentFilter );
 
         //设置播放线程
@@ -66,7 +77,7 @@ public class MusicService extends Service {
             @Override
             public void run() {
                 try {
-                    Intent Intent_UpdateSeekBar = new Intent( TransportFlag.MainActivity );
+                    Intent Intent_UpdateSeekBar = new Intent( TransportFlag.MusicService );
                     Intent_UpdateSeekBar.putExtra( "SeekBarTo", mediaplayer.getCurrentPosition() );
                     Intent_UpdateSeekBar.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
                     Intent_UpdateSeekBar.putExtra( TransportFlag.State, TransportFlag.SeekTo );
@@ -113,6 +124,10 @@ public class MusicService extends Service {
         super.onDestroy();
     }
 
+    /*****************************************************************************************
+     ************************************    自定义方法    ************************************
+     *****************************************************************************************/
+
     /**
      * 载入歌曲
      **/
@@ -126,16 +141,19 @@ public class MusicService extends Service {
                 MediaStore.Audio.Media.DEFAULT_SORT_ORDER );
         if (cursor != null) {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-                //如果不是音乐
                 String isMusic = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.IS_MUSIC ) );
                 if (isMusic != null && isMusic.equals( "" )) continue;
-                String path;
+                String string;
                 MusicBean music;
-                if ((path = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.DATA ) )).endsWith( ".mp3" )) {
+                if ((string = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.DATA ) )).endsWith( ".mp3" )) {
                     music = new MusicBean();
-                    music.setMusicName( cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.TITLE ) ).replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
-                            .replaceAll( ".mp3", "" ) );
-                    music.setMusicPath( path );
+                    music.setMusicPath( string );
+                    string = getMusicAttribution( cursor, MediaStore.Audio.Media.TITLE );
+                    music.setMusicName( (string != null) ? string : "null" );
+                    string = getMusicAttribution( cursor, MediaStore.Audio.Media.ARTIST );
+                    music.setMusicArtist( (string != null) ? string : "null" );
+                    string = getMusicAttribution( cursor, MediaStore.Audio.Media.ALBUM );
+                    music.setMusicAlbum( (string != null) ? string : "null" );
                     mMusicList.add( music );
                 }
             }
@@ -147,11 +165,20 @@ public class MusicService extends Service {
     }
 
     /**
+     * 获取音乐属性
+     **/
+    public String getMusicAttribution(Cursor cursor, String type) {
+        return cursor.getString( cursor.getColumnIndexOrThrow( type ) )
+                .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
+                .replaceAll( ".mp3", "" );
+    }
+
+    /**
      * 发送列表给Service
      **/
     public void sendMusicList(ArrayList<MusicBean> MusicList) {
-        Intent Intent_SendMusicList = new Intent( TransportFlag.MainActivity );
-        Intent_SendMusicList.putParcelableArrayListExtra( "mMusicList", MusicList );
+        Intent Intent_SendMusicList = new Intent( TransportFlag.MusicService );
+        Intent_SendMusicList.putExtra( "mMusicList", MusicList );
         Intent_SendMusicList.putExtra( TransportFlag.State, TransportFlag.LoadMusic );
         //将播放列表发给Activity        测试完毕
         sendBroadcast( Intent_SendMusicList );
@@ -197,7 +224,7 @@ public class MusicService extends Service {
                         PlayArrayIndex = PlayArrayIndex % mMusicList.size();
                         ItemLocationIndex = PlayArray[PlayArrayIndex];
 
-                        Intent Intent_NextItem = new Intent( TransportFlag.MainActivity );
+                        Intent Intent_NextItem = new Intent( TransportFlag.MusicService );
                         Intent_NextItem.putExtra( TransportFlag.NextItem, mMusicList.get( ItemLocationIndex ).getMusicName() );
                         Intent_NextItem.putExtra( TransportFlag.State, TransportFlag.NextItem );
                         //发送下一首给Activity用于Toast     测试完毕
@@ -213,7 +240,7 @@ public class MusicService extends Service {
                 mediaplayer.setOnPreparedListener( new MediaPlayer.OnPreparedListener() {
                     @Override
                     public void onPrepared(MediaPlayer mp) {
-                        Intent Intent_SeekPrepare = new Intent( TransportFlag.MainActivity );
+                        Intent Intent_SeekPrepare = new Intent( TransportFlag.MusicService );
                         Intent_SeekPrepare.putExtra( "SeekBarMax", mediaplayer.getDuration() );
                         Intent_SeekPrepare.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getDuration() ) ) );
                         Intent_SeekPrepare.putExtra( TransportFlag.State, TransportFlag.SeekPrepare );
@@ -224,7 +251,7 @@ public class MusicService extends Service {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Intent Intent_CurrentItem = new Intent( TransportFlag.MainActivity );
+            Intent Intent_CurrentItem = new Intent( TransportFlag.MusicService );
             Intent_CurrentItem.putExtra( TransportFlag.CurrentItem, mMusicList.get( ItemLocationIndex ) );
             Intent_CurrentItem.putExtra( TransportFlag.State, TransportFlag.CurrentItem );
             //发送当前播放条目给Activity     测试完毕
@@ -278,7 +305,7 @@ public class MusicService extends Service {
             Log.e( TransportFlag.State, state );
             switch (state) {
                 case TransportFlag.LoadMusic:                                   //接收加载音乐           测试完毕
-                    mMusicList = (ArrayList) (intent.getParcelableArrayListExtra( "mMusicList" ));
+                    mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));
                     ModeSetting( mode );
                     break;
                 case TransportFlag.PlayDefault:                                 //接收默认播放曲目       测试完毕

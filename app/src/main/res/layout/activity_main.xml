@@ -9,6 +9,13 @@
     tools:openDrawer="start">
 
     <include
+        android:id="@+id/switch_welcome"
+        layout="@layout/welcome_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <include
+        android:id="@+id/switch_main"
         layout="@layout/content_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

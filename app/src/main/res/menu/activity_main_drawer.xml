@@ -6,43 +6,45 @@
             <item
                 android:id="@+id/nav_shareByQQ"
                 android:icon="@drawable/ic_menu_share"
-                android:title="QQ" />
+                android:title="QQ"/>
             <item
                 android:id="@+id/nav_shareByWechat"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Wechat" />
+                android:title="Wechat"/>
         </menu>
     </item>
-    
+
     <item android:title="Send">
         <menu>
             <item
                 android:id="@+id/nav_sendByQQ"
                 android:icon="@drawable/ic_menu_send"
-                android:title="QQ" />
+                android:title="QQ"/>
             <item
                 android:id="@+id/nav_sendByWechat"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Wechat" />
+                android:title="Wechat"/>
             <item
                 android:id="@+id/nav_sendByBluetooth"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Bluetooth" />
+                android:title="Bluetooth"/>
         </menu>
     </item>
 
-    <group android:checkableBehavior="none">
-        <item
-            android:id="@+id/nav_setToRingtone"
-            android:icon="@drawable/ic_menu_settings"
-            android:title="Ringtone" />
-        <item
-            android:id="@+id/nav_version"
-            android:icon="@drawable/ic_menu_settings"
-            android:title="Version" />
-        <item
-            android:id="@+id/nav_exit"
-            android:icon="@drawable/ic_menu_settings"
-            android:title="Exit" />
-    </group>
+    <item android:title="Setting">
+        <menu>
+            <item
+                android:id="@+id/nav_setToRingtone"
+                android:icon="@drawable/ic_menu_settings"
+                android:title="Ringtone"/>
+            <item
+                android:id="@+id/nav_version"
+                android:icon="@drawable/ic_menu_settings"
+                android:title="Version"/>
+            <item
+                android:id="@+id/nav_exit"
+                android:icon="@drawable/ic_menu_settings"
+                android:title="Exit"/>
+        </menu>
+    </item>
 </menu>

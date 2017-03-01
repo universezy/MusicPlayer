@@ -1,11 +1,12 @@
 package com.example.administrator.musicplayer;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import java.io.Serializable;
 
-class MusicBean implements Parcelable {
+class MusicBean implements Serializable {
     private String musicName;
     private String musicPath;
+    private String musicArtist;
+    private String musicAlbum;
 
     String getMusicName() {
         return musicName;
@@ -23,37 +24,19 @@ class MusicBean implements Parcelable {
         this.musicPath = musicPath;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    String getMusicArtist() {
+        return musicArtist;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(musicName);
-        dest.writeString(musicPath);
+    void setMusicArtist(String musicArtist) {
+        this.musicArtist = musicArtist;
     }
 
-    /**
-     * 必须用 public static final 修饰符
-     * 对象必须用 CREATOR
-     */
-    public static final Creator<MusicBean> CREATOR = new Creator<MusicBean>() {
-        @Override
-        public MusicBean createFromParcel(Parcel source) {
-            String name = source.readString();
-            String path = source.readString();
+    String getMusicAlbum() {
+        return musicAlbum;
+    }
 
-            MusicBean music = new MusicBean();
-            music.setMusicName(name);
-            music.setMusicPath(path);
-
-            return music;
-        }
-
-        @Override
-        public MusicBean[] newArray(int size) {
-            return new MusicBean[size];
-        }
-    };
+    void setMusicAlbum(String musicAlbum) {
+        this.musicAlbum = musicAlbum;
+    }
 }

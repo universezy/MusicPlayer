@@ -31,12 +31,16 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".LyricActivity">
+        </activity>
+
         <activity
             android:name="com.tencent.tauth.AuthActivity"
             android:launchMode="singleTask"
             android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
+
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <!--  替换APPID  -->
@@ -58,22 +62,13 @@
 
         <service
             android:name="com.example.administrator.musicplayer.MusicService"
-            android:enabled="true"/>
+            android:enabled="true">
+        </service>
 
         <receiver android:name="com.example.administrator.musicplayer.MusicService$MusicServiceReceiver">
-            <intent-filter>
-                <action android:name="MainActivity"/>
-            </intent-filter>
         </receiver>
 
         <receiver android:name="com.example.administrator.musicplayer.MainActivity$MainActivityReceiver">
-            <intent-filter>
-                <action android:name="MusicService"/>
-            </intent-filter>
-        </receiver>
-
-        <receiver android:name="com.example.administrator.musicplayer.BluetoothActivity$BluetoothReceiver">
-
         </receiver>
     </application>
 

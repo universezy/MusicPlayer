@@ -7,9 +7,7 @@
               android:layout_height="match_parent"
               android:orientation="vertical"
               app:layout_behavior="@string/appbar_scrolling_view_behavior"
-              tools:context="com.example.administrator.musicplayer.MainActivity"
-              >
-    <!--tools:showIn="@layout/activity_main"-->
+              tools:context="com.example.administrator.musicplayer.MainActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,22 +30,22 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btnMore"
+            android:id="@+id/btnBack"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="15"
-            android:text="MORE"
+            android:text="BACK"
             android:textSize="10dp"/>
 
-        <SearchView
-            android:id="@+id/svSearch"
+        <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_gravity="center_vertical"
             android:layout_weight="70"
-            android:iconifiedByDefault="false"
-            android:inputType="textFilter"
-            android:queryHint="Search"/>
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:text="Music Player"
+            android:textColor="@color/black"
+            android:textSize="18dp"/>
 
         <Button
             android:id="@+id/btnMode"
@@ -65,21 +63,46 @@
         android:layout_gravity="center_horizontal"
         android:layout_weight="8"
         android:gravity="center"
-        android:text="Music Name"
+        android:background="@color/white"
+        android:text="Name"
         android:textColor="@color/blue"
         android:textSize="20dp"/>
 
-    <ListView
-        android:id="@+id/lvList"
+    <TextView
+        android:id="@+id/tvArtist"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="8"
+        android:gravity="center"
+        android:background="@color/silver"
+        android:text="Artist"
+        android:textColor="@color/blue"
+        android:textSize="20dp"/>
+
+    <TextView
+        android:id="@+id/tvAlbum"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="8"
+        android:gravity="center"
+        android:background="@color/white"
+        android:text="Album"
+        android:textColor="@color/blue"
+        android:textSize="20dp"/>
+
+    <View
+        android:id="@+id/vLyric"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_gravity="center_horizontal"
         android:layout_weight="68"
         android:background="@color/silver"
         android:gravity="center"
-        android:text="List"
+        android:text="Lyric"
         android:textColor="@color/black"
-        android:textSize="20dp"/>
+        android:textSize="40dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
