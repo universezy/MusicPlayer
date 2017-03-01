@@ -45,7 +45,7 @@
             android:gravity="center"
             android:text="Music Player"
             android:textColor="@color/black"
-            android:textSize="18dp"/>
+            android:textSize="20dp"/>
 
         <Button
             android:id="@+id/btnMode"
@@ -66,7 +66,7 @@
         android:background="@color/white"
         android:text="Name"
         android:textColor="@color/blue"
-        android:textSize="20dp"/>
+        android:textSize="15dp"/>
 
     <TextView
         android:id="@+id/tvArtist"
@@ -78,7 +78,7 @@
         android:background="@color/silver"
         android:text="Artist"
         android:textColor="@color/blue"
-        android:textSize="20dp"/>
+        android:textSize="15dp"/>
 
     <TextView
         android:id="@+id/tvAlbum"
@@ -90,9 +90,9 @@
         android:background="@color/white"
         android:text="Album"
         android:textColor="@color/blue"
-        android:textSize="20dp"/>
+        android:textSize="15dp"/>
 
-    <View
+    <com.example.administrator.musicplayer.LyricView
         android:id="@+id/vLyric"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -102,7 +102,7 @@
         android:gravity="center"
         android:text="Lyric"
         android:textColor="@color/black"
-        android:textSize="40dp"/>
+        android:textSize="30dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"

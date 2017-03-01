@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements
     //微信分享工具类
     public WeChatShareUtil weChatShareUtil;
     //接收器
-    protected MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
+    protected MainActivityReceiver mainActivityReceiver= new MainActivityReceiver();
 
     /**
      * 自定义元素
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements
     //播放列表
     private ArrayList<MusicBean> mMusicList = new ArrayList<>();
     //搜索列表
-    private ArrayList<MusicBean> mSearchList = new ArrayList<>();
+    private ArrayList<MusicBean> mSearchList= new ArrayList<>();
     //当前播放条目
     public MusicBean CurrentMusicItem;
     //播放模式序号
@@ -538,7 +538,7 @@ public class MainActivity extends AppCompatActivity implements
                 .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ).replaceAll( " ", "%20" );
         switch (ShareBy) {
             case ShareByQQ:
-                HandlerMain.post( new Runnable() {
+                new Thread( new Runnable() {
                     @Override
                     public void run() {
                         tencent = Tencent.createInstance( String.valueOf( R.string.APP_ID_QQ ), MainActivity.this );
@@ -551,10 +551,10 @@ public class MainActivity extends AppCompatActivity implements
                         params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
                         tencent.shareToQQ( MainActivity.this, params, new ShareListener() );
                     }
-                } );
+                } ).start();
                 break;
             case ShareByWechat:
-                HandlerMain.post( new Runnable() {
+                new Thread( new Runnable() {
                     @Override
                     public void run() {
 //                        iwxapi = WXAPIFactory.createWXAPI( MainActivity.this, String.valueOf( R.string.APP_ID_WX ), true );
@@ -582,7 +582,7 @@ public class MainActivity extends AppCompatActivity implements
                             Toast.makeText( MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT ).show();
                         }
                     }
-                } );
+                } ).start();
                 break;
             default:
                 break;
@@ -596,7 +596,7 @@ public class MainActivity extends AppCompatActivity implements
         if (mtvName.getText().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
         } else {
-            HandlerMain.post( new Runnable() {
+            new Thread( new Runnable() {
                 @Override
                 public void run() {
                     String filePath = CurrentMusicItem.getMusicPath();
@@ -649,7 +649,7 @@ public class MainActivity extends AppCompatActivity implements
                         }
                     }
                 }
-            } );
+            } ).start();
         }
     }
 
@@ -660,7 +660,7 @@ public class MainActivity extends AppCompatActivity implements
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
         } else {
-            HandlerMain.post( new Runnable() {
+            new Thread( new Runnable() {
                 @Override
                 public void run() {
                     File file = new File( CurrentMusicItem.getMusicPath() );
@@ -703,7 +703,7 @@ public class MainActivity extends AppCompatActivity implements
                                 }
                             } ).show();
                 }
-            } );
+            } ).start();
         }
     }
 
@@ -746,7 +746,7 @@ public class MainActivity extends AppCompatActivity implements
             int SeekBarMax, SeekBarTo;
             String strTextViewTo, strNextItem;
             String strState = intent.getStringExtra( TransportFlag.State );
-           // Log.e( TransportFlag.State, strState );
+            Log.e( TransportFlag.State, strState );
             switch (strState) {
                 case TransportFlag.LoadMusic:                                       //接收加载音乐       测试完毕
                     mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));

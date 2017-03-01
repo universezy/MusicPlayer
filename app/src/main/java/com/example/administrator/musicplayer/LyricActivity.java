@@ -4,10 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -32,7 +30,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     //文本视图
     private TextView mtvName, mtvArtist, mtvAlbum, mtvCurrentProgress, mtvTotalProgress;
     //视图
-    private View view;
+    private LyricView lyricView;
     //拖动条
     private SeekBar seekBar;
 
@@ -41,10 +39,20 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      **/
     //主Activity实例
     private MainActivity mainActivity;
+    //歌词解析实例
+    private LyricParsing lyricParsing;
     //当前播放条目
     private MusicBean CurrentMusicItem;
     //接收器
     private LyricActivityReceiver lyricActivityReceiver = new LyricActivityReceiver();
+    //处理器
+    private Handler HandlerComponent = new Handler();
+
+    private Handler HandlerParsing = new Handler();
+
+    private Runnable RunnableDraw;
+
+    int iii = 0;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -61,6 +69,9 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
         //注册接收器
         IntentFilter intentFilter = new IntentFilter( TransportFlag.MusicService );
         registerReceiver( lyricActivityReceiver, intentFilter );
+
+        InitComponent();
+        DrawLyric();
     }
 
     /**
@@ -68,7 +79,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      **/
     public void InitLayout() {
         //设置视图
-        view = findViewById( R.id.vLyric );
+        lyricView = (LyricView) findViewById( R.id.vLyric );
 
         //设置拖动条
         seekBar = (SeekBar) findViewById( R.id.sb );
@@ -92,8 +103,6 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
         mbtnNext.setOnClickListener( this );
         mbtnPlay = (Button) findViewById( R.id.btnPlay );
         mbtnPlay.setOnClickListener( this );
-
-        LoadUI();
     }
 
     /*****************************************************************************************
@@ -150,10 +159,11 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      *****************************************************************************************/
 
     /**
-     * *跳转页面后初始化UI
+     * *跳转页面后初始化
      */
-    public void LoadUI() {
-        new Thread( new Runnable() {
+    public void InitComponent() {
+        CurrentMusicItem = mainActivity.CurrentMusicItem;
+        HandlerComponent.post( new Runnable() {
             @Override
             public void run() {
                 mtvCurrentProgress.setText( mainActivity.mtvCurrentProgress.getText() );
@@ -161,29 +171,33 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 seekBar.setProgress( mainActivity.seekBar.getProgress() );
                 seekBar.setMax( mainActivity.seekBar.getMax() );
                 mbtnPlay.setText( mainActivity.mbtnPlay.getText() );
-                CurrentMusicItem = mainActivity.CurrentMusicItem;
                 mtvName.setText( "Name : " + CurrentMusicItem.getMusicName() );
                 mtvArtist.setText( "Artist : " + CurrentMusicItem.getMusicArtist() );
                 mtvAlbum.setText( "Album : " + CurrentMusicItem.getMusicAlbum() );
-                LyricParsing lyricParsing = new LyricParsing( CurrentMusicItem.getMusicName() );
-                Draw();
             }
-        } ).start();
+        } );
     }
 
     /**
-     * 绘图
+     * 绘制歌词
      **/
-    public void Draw() {
-        Log.e( "Start drawing:", "-----------------" );
-        Canvas canvas = new Canvas();
-        Paint paint = new Paint();
-        paint.setColor( Color.BLUE );
-        paint.setAntiAlias( true );
-        paint.setTextSize( 1000 );
-        canvas.drawText( "applegrehjtrjqhqgr", 60, 60, paint );
-        canvas.drawCircle( 100, 100, 400, paint );
-        view.draw( canvas );
+    public void DrawLyric() {
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                lyricParsing = new LyricParsing( CurrentMusicItem.getMusicName() );
+            }
+        } ).start();
+        RunnableDraw = new Runnable() {
+            @Override
+            public void run() {
+                iii++;
+                lyricView.setLyric( iii + "" );
+                lyricView.invalidate();
+                HandlerComponent.postDelayed( RunnableDraw, 1000 );
+            }
+        };
+        HandlerComponent.post( RunnableDraw );
     }
 
     /**
@@ -195,7 +209,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
             int SeekBarMax, SeekBarTo;
             String strTextViewTo, strNextItem;
             String strState = intent.getStringExtra( TransportFlag.State );
-            //Log.e( TransportFlag.State, strState );
+            Log.e( TransportFlag.State, strState );
             switch (strState) {
                 case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );

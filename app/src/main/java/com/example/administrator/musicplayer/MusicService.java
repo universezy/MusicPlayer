@@ -43,13 +43,13 @@ public class MusicService extends Service {
     //播放列表
     public ArrayList<MusicBean> mMusicList = new ArrayList<>();
     //播放列表索引
-    public int ItemLocationIndex;
+    public int ItemLocationIndex = 0;
     //播放顺序数组
     private int[] PlayArray;
     //播放顺序数组索引
-    private int PlayArrayIndex;
+    private int PlayArrayIndex = 0;
     //播放模式序号
-    private int mode;
+    private int mode = 0;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -62,6 +62,8 @@ public class MusicService extends Service {
         //注册接收器
         IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
         registerReceiver( musicServiceReceiver, intentFilter );
+
+        LoadMusic();
 
         //设置播放线程
         RunnablePlay = new Runnable() {
@@ -89,10 +91,6 @@ public class MusicService extends Service {
                 }
             }
         };
-        PlayArrayIndex = 0;
-        ItemLocationIndex = 0;
-        mode = 0;
-        LoadMusic();
     }
 
     @Override
@@ -132,36 +130,41 @@ public class MusicService extends Service {
      * 载入歌曲
      **/
     public void LoadMusic() {
-        mMusicList.clear();
-        //利用游标查找媒体数据库中的音乐文件
-        Cursor cursor = MusicService.this.getContentResolver().query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null,
-                MediaStore.Audio.Media.DATA + " like ?",
-                new String[]{Environment.getExternalStorageDirectory() + File.separator + "%"},
-                MediaStore.Audio.Media.DEFAULT_SORT_ORDER );
-        if (cursor != null) {
-            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-                String isMusic = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.IS_MUSIC ) );
-                if (isMusic != null && isMusic.equals( "" )) continue;
-                String string;
-                MusicBean music;
-                if ((string = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.DATA ) )).endsWith( ".mp3" )) {
-                    music = new MusicBean();
-                    music.setMusicPath( string );
-                    string = getMusicAttribution( cursor, MediaStore.Audio.Media.TITLE );
-                    music.setMusicName( (string != null) ? string : "null" );
-                    string = getMusicAttribution( cursor, MediaStore.Audio.Media.ARTIST );
-                    music.setMusicArtist( (string != null) ? string : "null" );
-                    string = getMusicAttribution( cursor, MediaStore.Audio.Media.ALBUM );
-                    music.setMusicAlbum( (string != null) ? string : "null" );
-                    mMusicList.add( music );
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                mMusicList.clear();
+                //利用游标查找媒体数据库中的音乐文件
+                Cursor cursor = MusicService.this.getContentResolver().query(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null,
+                        MediaStore.Audio.Media.DATA + " like ?",
+                        new String[]{Environment.getExternalStorageDirectory() + File.separator + "%"},
+                        MediaStore.Audio.Media.DEFAULT_SORT_ORDER );
+                if (cursor != null) {
+                    for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                        String isMusic = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.IS_MUSIC ) );
+                        if (isMusic != null && isMusic.equals( "" )) continue;
+                        String string;
+                        MusicBean music;
+                        if ((string = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.DATA ) )).endsWith( ".mp3" )) {
+                            music = new MusicBean();
+                            music.setMusicPath( string );
+                            string = getMusicAttribution( cursor, MediaStore.Audio.Media.TITLE );
+                            music.setMusicName( (string != null) ? string : "null" );
+                            string = getMusicAttribution( cursor, MediaStore.Audio.Media.ARTIST );
+                            music.setMusicArtist( (string != null) ? string : "null" );
+                            string = getMusicAttribution( cursor, MediaStore.Audio.Media.ALBUM );
+                            music.setMusicAlbum( (string != null) ? string : "null" );
+                            mMusicList.add( music );
+                        }
+                    }
+                    cursor.close();
+
+                    ModeSetting( mode );
+                    sendMusicList( mMusicList );
                 }
             }
-            cursor.close();
-
-            ModeSetting( mode );
-            sendMusicList( mMusicList );
-        }
+        } ).start();
     }
 
     /**
