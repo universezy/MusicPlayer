@@ -14,6 +14,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class LyricActivity extends AppCompatActivity implements View.OnClickListener, SeekBar.OnSeekBarChangeListener {
@@ -43,16 +44,16 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     private LyricParsing lyricParsing;
     //当前播放条目
     private MusicBean CurrentMusicItem;
+    //歌词内容列表
+    private ArrayList<LyricItem> lyricArray;
     //接收器
     private LyricActivityReceiver lyricActivityReceiver = new LyricActivityReceiver();
     //处理器
-    private Handler HandlerComponent = new Handler();
-
-    private Handler HandlerParsing = new Handler();
-
-    private Runnable RunnableDraw;
-
-    int iii = 0;
+    private Handler HandlerLyric = new Handler();
+    //歌词内容索引
+    private int index;
+    //歌词加载标识
+    private boolean isLyricPrepared = false;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -71,7 +72,6 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
         registerReceiver( lyricActivityReceiver, intentFilter );
 
         InitComponent();
-        DrawLyric();
     }
 
     /**
@@ -114,6 +114,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      **/
     @Override
     public void onClick(View v) {
+        if (mainActivity.isComponentLocked) return;
         switch (v.getId()) {
             case R.id.btnBack:
                 LyricActivity.this.finish();
@@ -138,7 +139,6 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     /**
      * SeekBar设置
      **/
-
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
@@ -163,7 +163,8 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      */
     public void InitComponent() {
         CurrentMusicItem = mainActivity.CurrentMusicItem;
-        HandlerComponent.post( new Runnable() {
+        LoadLyric( CurrentMusicItem.getMusicName() );
+        HandlerLyric.post( new Runnable() {
             @Override
             public void run() {
                 mtvCurrentProgress.setText( mainActivity.mtvCurrentProgress.getText() );
@@ -179,25 +180,41 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     }
 
     /**
-     * 绘制歌词
+     * 加载歌词资源
      **/
-    public void DrawLyric() {
+    public void LoadLyric(String MusicName) {
+        final String musicName = MusicName;
+        if (lyricArray != null)
+            lyricArray.clear();
         new Thread( new Runnable() {
             @Override
             public void run() {
-                lyricParsing = new LyricParsing( CurrentMusicItem.getMusicName() );
+                lyricParsing = new LyricParsing( musicName );
+                lyricArray = lyricParsing.LyricArray;
+                isLyricPrepared = true;
             }
         } ).start();
-        RunnableDraw = new Runnable() {
-            @Override
-            public void run() {
-                iii++;
-                lyricView.setLyric( iii + "" );
-                lyricView.invalidate();
-                HandlerComponent.postDelayed( RunnableDraw, 1000 );
-            }
-        };
-        HandlerComponent.post( RunnableDraw );
+    }
+
+    /**
+     * 绘制歌词
+     **/
+    public void DrawLyric(int CurrentTime) {
+        final int CurrentPosition = CurrentTime;
+        if (isLyricPrepared) {
+            HandlerLyric.post( new Runnable() {
+                @Override
+                public void run() {
+                    if (lyricArray.get( index ).getTime() - CurrentPosition < 200) {
+                        lyricView.setLyric( lyricArray.get( index ).getLyric() );
+                        lyricView.invalidate();
+                        index++;
+                        Log.e( "time", lyricArray.get( index ).getTime() + "" );
+                        Log.e( "lyric", lyricArray.get( index ).getLyric() );
+                    }
+                }
+            } );
+        }
     }
 
     /**
@@ -207,17 +224,17 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
         @Override
         public void onReceive(Context context, Intent intent) {
             int SeekBarMax, SeekBarTo;
-            String strTextViewTo, strNextItem;
+            String strTextViewTo;
             String strState = intent.getStringExtra( TransportFlag.State );
-            Log.e( TransportFlag.State, strState );
+            //Log.e( TransportFlag.State, strState );
             switch (strState) {
-                case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
+                case TransportFlag.SeekTo:                                              //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
                     strTextViewTo = intent.getStringExtra( "TextViewTo" );
                     seekBar.setProgress( SeekBarTo );
                     mtvCurrentProgress.setText( strTextViewTo );
                     break;
-                case TransportFlag.SeekPrepare:                                     //接收播放准备        测试完毕
+                case TransportFlag.SeekPrepare:                                         //接收播放准备        测试完毕
                     SeekBarMax = intent.getIntExtra( "SeekBarMax", 0 );
                     strTextViewTo = intent.getStringExtra( "TextViewTo" );
                     seekBar.setMax( SeekBarMax );
@@ -225,9 +242,20 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                     mtvCurrentProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
                     mbtnPlay.setText( "PAUSE" );
                     break;
-                case TransportFlag.CurrentItem:                                     //接收当前条目        测试完毕
-                    CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.CurrentItem );
+                case TransportFlag.NextItem:                                            //接收下一首
+                    isLyricPrepared = false;
+                    String NextMusicName = intent.getStringExtra( TransportFlag.NextItem );
+                    LoadLyric( NextMusicName );
+                    break;
+                case TransportFlag.LyricTo:                                             //接收当前歌词位置    测试完毕
+                    int CurrentPosition = intent.getIntExtra( "CurrentPosition", 0 );
+                    DrawLyric( CurrentPosition );
+                    break;
+                case TransportFlag.Prepare:                                             //接收播放准备
+                    CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.Prepare );
                     mtvName.setText( CurrentMusicItem.getMusicName() );
+                    LoadLyric( CurrentMusicItem.getMusicName() );
+                    break;
                 default:
                     break;
             }

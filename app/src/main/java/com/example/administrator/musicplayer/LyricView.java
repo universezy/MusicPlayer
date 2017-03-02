@@ -27,8 +27,8 @@ public class LyricView extends TextView{
         Paint paint = new Paint();
         paint.setColor( Color.BLUE );
         paint.setAntiAlias( true );
-        paint.setTextSize( 30 );
-        canvas.drawText( stringLyric, 60, 60, paint );
+        paint.setTextSize( 60 );
+        canvas.drawText( stringLyric,100, 100, paint );
 
         super.onDraw(canvas);
     }

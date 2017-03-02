@@ -92,7 +92,7 @@ public class LyricParsing {
                             int minute = Integer.parseInt( str.substring( str.indexOf( "[" ) + 1, str.indexOf( ":" ) ) );
                             int second = Integer.parseInt( str.substring( str.indexOf( ":" ) + 1, str.indexOf( "." ) ) );
                             int millisecond = Integer.parseInt( str.substring( str.indexOf( "." ) + 1 ) );
-                            time = minute * 3600 + second * 60 + millisecond;
+                            time = minute * 60000 + second * 1000 + millisecond;
                             lyricItem.setLyric( StrLyric );
                             lyricItem.setTime( time );
                             LyricArray.add( lyricItem );
@@ -105,7 +105,7 @@ public class LyricParsing {
                         int minute = Integer.parseInt( tempTime.substring( tempTime.indexOf( "[" ) + 1, tempTime.indexOf( ":" ) ) );
                         int second = Integer.parseInt( tempTime.substring( tempTime.indexOf( ":" ) + 1, tempTime.indexOf( "." ) ) );
                         int millisecond = Integer.parseInt( tempTime.substring( tempTime.indexOf( "." ) + 1 ));
-                        time = minute * 3600 + second * 60 + millisecond;
+                        time = minute * 60000 + second * 1000 + millisecond;
                         lyricItem.setLyric( StrLyric );
                         lyricItem.setTime( time );
                         LyricArray.add( lyricItem );

@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements
     //微信分享工具类
     public WeChatShareUtil weChatShareUtil;
     //接收器
-    protected MainActivityReceiver mainActivityReceiver= new MainActivityReceiver();
+    protected MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
 
     /**
      * 自定义元素
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements
     //播放列表
     private ArrayList<MusicBean> mMusicList = new ArrayList<>();
     //搜索列表
-    private ArrayList<MusicBean> mSearchList= new ArrayList<>();
+    private ArrayList<MusicBean> mSearchList = new ArrayList<>();
     //当前播放条目
     public MusicBean CurrentMusicItem;
     //播放模式序号
@@ -111,6 +111,8 @@ public class MainActivity extends AppCompatActivity implements
     final static int ShareByQQ = 0, ShareByWechat = 1;
     //发送类型
     final static int SendByQQ = 0, SendByWechat = 1, SendByBluetooth = 2;
+    //按钮锁
+    public boolean isComponentLocked = true;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -205,6 +207,11 @@ public class MainActivity extends AppCompatActivity implements
         //设置导航视图
         navigationView = (NavigationView) findViewById( R.id.nav_view );
         navigationView.setNavigationItemSelectedListener( this );
+
+        //开启手势滑动
+        drawerLayout.setDrawerLockMode( DrawerLayout.LOCK_MODE_UNLOCKED );
+
+        isComponentLocked = false;
     }
 
     /*****************************************************************************************
@@ -217,6 +224,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onClick(View v) {
         searchView.clearFocus();
+        if (isComponentLocked) return;
         switch (v.getId()) {
             case R.id.tvName:
                 Intent intent_LyricActivity = new Intent( MainActivity.this, LyricActivity.class );
@@ -746,9 +754,9 @@ public class MainActivity extends AppCompatActivity implements
             int SeekBarMax, SeekBarTo;
             String strTextViewTo, strNextItem;
             String strState = intent.getStringExtra( TransportFlag.State );
-            Log.e( TransportFlag.State, strState );
+            //Log.e( TransportFlag.State, strState );
             switch (strState) {
-                case TransportFlag.LoadMusic:                                       //接收加载音乐       测试完毕
+                case TransportFlag.LoadMusic:                                       //接收加载音乐列表     测试完毕
                     mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));
                     CurrentMusicItem = mMusicList.get( 0 );
                     HandlerMain.postDelayed( new Runnable() {
@@ -768,6 +776,7 @@ public class MainActivity extends AppCompatActivity implements
                     break;
                 case TransportFlag.NextItem:                                        //接收下一首          测试完毕
                     strNextItem = intent.getStringExtra( TransportFlag.NextItem );
+                    isComponentLocked = true;
                     Toast.makeText( MainActivity.this, "Next: " + strNextItem, Toast.LENGTH_SHORT ).show();
                     break;
                 case TransportFlag.SeekPrepare:                                     //接收播放准备        测试完毕
@@ -778,8 +787,9 @@ public class MainActivity extends AppCompatActivity implements
                     mtvCurrentProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
                     mbtnPlay.setText( "PAUSE" );
                     break;
-                case TransportFlag.CurrentItem:                                     //接收当前条目        测试完毕
-                    CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.CurrentItem );
+                case TransportFlag.Prepare:                                     //接收当前条目        测试完毕
+                    CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.Prepare );
+                    isComponentLocked = false;
                     mtvName.setText( CurrentMusicItem.getMusicName() );
                     break;
                 default:
