@@ -1,4 +1,4 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -37,6 +37,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.administrator.musicplayer.datastructure.MusicBean;
+import com.example.administrator.musicplayer.service.MusicService;
+import com.example.administrator.musicplayer.R;
+import com.example.administrator.musicplayer.tool.ShareListener;
+import com.example.administrator.musicplayer.tool.TransportFlag;
+import com.example.administrator.musicplayer.tool.WeChatShareUtil;
+import com.example.administrator.musicplayer.tool.ListAdapter;
 import com.tencent.connect.share.QQShare;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.opensdk.openapi.IWXAPI;

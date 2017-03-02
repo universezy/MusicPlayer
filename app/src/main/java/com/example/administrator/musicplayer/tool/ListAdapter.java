@@ -1,4 +1,4 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.tool;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -8,18 +8,21 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.example.administrator.musicplayer.R;
+import com.example.administrator.musicplayer.datastructure.MusicBean;
+
 import java.util.ArrayList;
 
-class ListAdapter extends ArrayAdapter {
+public class ListAdapter extends ArrayAdapter {
     private ArrayList<MusicBean> list = new ArrayList<>();
     private LayoutInflater layoutInflater;
 
-    ListAdapter(Context context, int resource) {
+    public ListAdapter(Context context, int resource) {
         super(context, resource);
         layoutInflater = LayoutInflater.from(context);
     }
 
-    void setList(ArrayList<MusicBean> list){
+    public void setList(ArrayList<MusicBean> list){
         this.list = list;
         notifyDataSetChanged();
     }

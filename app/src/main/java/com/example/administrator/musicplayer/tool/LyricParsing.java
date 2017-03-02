@@ -1,7 +1,10 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.tool;
 
 import android.os.Environment;
 import android.util.Log;
+
+import com.example.administrator.musicplayer.datastructure.MusicBean;
+import com.example.administrator.musicplayer.datastructure.LyricItem;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,7 +30,6 @@ public class LyricParsing implements Serializable {
 
     public LyricParsing(MusicBean musicBean) {
         this.MusicName = musicBean.getMusicName();
-        if(musicBean.getLyricPath() != null)return;
         //检测SD卡是否存在
         if (Environment.getExternalStorageState().equals( Environment.MEDIA_MOUNTED )) {
             Traverse( Environment.getExternalStorageDirectory() );
@@ -48,7 +50,7 @@ public class LyricParsing implements Serializable {
                     Traverse( f );
                 } else {
                     if (f.getName().endsWith( ".lrc" )) {
-                        if (f.getName().replace( ".lrc","" ).replace( " ","" ).contains( MusicName.replace( " ","" ) )) {
+                        if (f.getName().replace( ".lrc", "" ).replace( " ", "" ).contains( MusicName.replace( " ", "" ) )) {
                             this.pathLyric = f.getAbsolutePath();
                             break;
                         }
@@ -62,7 +64,6 @@ public class LyricParsing implements Serializable {
      * 解析歌词文件
      **/
     public void Parsing() {
-        if(LyricArray!=null)return;
         File file = new File( this.pathLyric );
         try {
             FileInputStream fileInputStream = new FileInputStream( file );
@@ -107,7 +108,7 @@ public class LyricParsing implements Serializable {
                         int time;
                         int minute = Integer.parseInt( tempTime.substring( tempTime.indexOf( "[" ) + 1, tempTime.indexOf( ":" ) ) );
                         int second = Integer.parseInt( tempTime.substring( tempTime.indexOf( ":" ) + 1, tempTime.indexOf( "." ) ) );
-                        int millisecond = Integer.parseInt( tempTime.substring( tempTime.indexOf( "." ) + 1 ));
+                        int millisecond = Integer.parseInt( tempTime.substring( tempTime.indexOf( "." ) + 1 ) );
                         time = minute * 60000 + second * 1000 + millisecond;
                         lyricItem.setLyric( StrLyric );
                         lyricItem.setTime( time );
@@ -125,10 +126,10 @@ public class LyricParsing implements Serializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Collections.sort(LyricArray, new SortByTime());
-        for(LyricItem lyricItem:LyricArray){
-            Log.e( "time",lyricItem.getTime()+"" );
-            Log.e( "lyric",lyricItem.getLyric() );
+        Collections.sort( LyricArray, new SortByTime() );
+        for (LyricItem lyricItem : LyricArray) {
+            Log.e( "time", lyricItem.getTime() + "" );
+            Log.e( "lyric", lyricItem.getLyric() );
         }
     }
 

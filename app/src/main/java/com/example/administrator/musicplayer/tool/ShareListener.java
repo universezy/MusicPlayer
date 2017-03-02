@@ -1,9 +1,9 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.tool;
 
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.UiError;
 
-class ShareListener implements IUiListener {
+public class ShareListener implements IUiListener {
     @Override
     public void onCancel() {
         // TODO Auto-generated method stub

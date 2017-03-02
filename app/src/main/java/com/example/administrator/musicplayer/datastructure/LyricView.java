@@ -1,4 +1,4 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.datastructure;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -27,8 +27,8 @@ public class LyricView extends TextView{
         Paint paint = new Paint();
         paint.setColor( Color.BLUE );
         paint.setAntiAlias( true );
-        paint.setTextSize( 60 );
-        canvas.drawText( stringLyric,60, 80, paint );
+        paint.setTextSize( 40 );
+        canvas.drawText( stringLyric,20, 80, paint );
 
         super.onDraw(canvas);
     }

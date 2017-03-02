@@ -1,4 +1,4 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.service;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -14,6 +14,9 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.util.Log;
+
+import com.example.administrator.musicplayer.datastructure.MusicBean;
+import com.example.administrator.musicplayer.tool.TransportFlag;
 
 import java.io.File;
 import java.text.SimpleDateFormat;

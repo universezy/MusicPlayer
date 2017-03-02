@@ -1,22 +1,22 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.datastructure;
 
 public class LyricItem {
     private int time;
     private String lyric;
 
-    void setTime(int time) {
+    public void setTime(int time) {
         this.time = time;
     }
 
-    void setLyric(String lyric) {
+    public void setLyric(String lyric) {
         this.lyric = lyric;
     }
 
-    int getTime() {
+    public int getTime() {
         return this.time;
     }
 
-    String getLyric() {
+    public String getLyric() {
         return this.lyric;
     }
 }

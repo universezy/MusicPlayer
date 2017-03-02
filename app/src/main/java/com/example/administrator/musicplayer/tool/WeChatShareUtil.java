@@ -1,8 +1,9 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.tool;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 
+import com.example.administrator.musicplayer.R;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.opensdk.modelmsg.WXImageObject;
 import com.tencent.mm.opensdk.modelmsg.WXMediaMessage;

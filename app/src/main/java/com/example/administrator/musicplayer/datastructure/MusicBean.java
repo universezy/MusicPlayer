@@ -1,9 +1,9 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.datastructure;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-class MusicBean implements Serializable {
+public class MusicBean implements Serializable {
     private String musicName;
     private String musicPath;
     private String musicArtist;
@@ -11,51 +11,51 @@ class MusicBean implements Serializable {
     private String lyricPath;
     private ArrayList<LyricItem> lyricList = new ArrayList();
 
-    String getMusicName() {
+    public String getMusicName() {
         return musicName;
     }
 
-    void setMusicName(String musicName) {
+    public void setMusicName(String musicName) {
         this.musicName = musicName;
     }
 
-    String getMusicPath() {
+    public String getMusicPath() {
         return musicPath;
     }
 
-    void setMusicPath(String musicPath) {
+    public void setMusicPath(String musicPath) {
         this.musicPath = musicPath;
     }
 
-    String getMusicArtist() {
+    public String getMusicArtist() {
         return musicArtist;
     }
 
-    void setMusicArtist(String musicArtist) {
+    public void setMusicArtist(String musicArtist) {
         this.musicArtist = musicArtist;
     }
 
-    String getMusicAlbum() {
+    public String getMusicAlbum() {
         return musicAlbum;
     }
 
-    void setMusicAlbum(String musicAlbum) {
+    public void setMusicAlbum(String musicAlbum) {
         this.musicAlbum = musicAlbum;
     }
 
-    String getLyricPath() {
+    public String getLyricPath() {
         return lyricPath;
     }
 
-    void setLyricPath(String lyricPath) {
+    public void setLyricPath(String lyricPath) {
         this.lyricPath = lyricPath;
     }
 
-    ArrayList<LyricItem> getLyricList() {
+    public ArrayList<LyricItem> getLyricList() {
         return lyricList;
     }
 
-    void setLyricList(ArrayList<LyricItem> lyricList) {
+    public void setLyricList(ArrayList<LyricItem> lyricList) {
         this.lyricList = lyricList;
     }
 }

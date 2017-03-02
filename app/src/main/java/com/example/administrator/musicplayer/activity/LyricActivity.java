@@ -1,4 +1,4 @@
-package com.example.administrator.musicplayer;
+package com.example.administrator.musicplayer.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,6 +14,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import com.example.administrator.musicplayer.datastructure.LyricItem;
+import com.example.administrator.musicplayer.tool.LyricParsing;
+import com.example.administrator.musicplayer.datastructure.LyricView;
+import com.example.administrator.musicplayer.datastructure.MusicBean;
+import com.example.administrator.musicplayer.R;
+import com.example.administrator.musicplayer.tool.TransportFlag;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -229,11 +236,6 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                         lyricArray = lyricParsing.LyricArray;
                         sizeOfList = lyricArray.size();
                         isLyricPrepared = true;
-//                        Intent Intent_Lyric = new Intent( TransportFlag.MusicService );
-//                        Intent_Lyric.putExtra( TransportFlag.LoadLyric ,lyricParsing );
-//                        Intent_Lyric.putExtra( TransportFlag.State,TransportFlag.LoadLyric );
-//                        //将歌词路径和解析发给MainActivity中的音乐数组
-//                        sendBroadcast( Intent_Lyric );
                     }
                     isComponentLocked = false;
                 }
