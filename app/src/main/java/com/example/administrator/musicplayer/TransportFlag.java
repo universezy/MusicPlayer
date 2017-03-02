@@ -19,6 +19,7 @@ public class TransportFlag {
     public static final String Mode = "TransportFlag.Mode";
     public static final String LyricTo = "TransportFlag.LyricTo";
     public static final String Prepare = "TransportFlag.Prepare";
+    public static final String LoadLyric = "TransportFlag.LoadLyric";
 
     public static final int OrderPlay = 0;
     public static final int SinglePlay = 1;

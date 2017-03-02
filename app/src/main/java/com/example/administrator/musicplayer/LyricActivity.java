@@ -53,11 +53,15 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     //处理器
     private Handler HandlerLyric = new Handler();
     //歌词内容索引
-    private int index;
+    private int Index;
     //歌词加载标识
     private boolean isLyricPrepared = false;
     //播放模式序号
     public int PlayMode = 0, mode = 0;
+    //按钮锁
+    public boolean isComponentLocked = true;
+    //歌词数组大小
+    public int sizeOfList = 0;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -118,7 +122,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      **/
     @Override
     public void onClick(View v) {
-        if (mainActivity.isComponentLocked) return;
+        if (isComponentLocked) return;
         switch (v.getId()) {
             case R.id.btnBack:
                 unregisterReceiver( lyricActivityReceiver );
@@ -126,7 +130,6 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 break;
             case R.id.btnMode:
                 setPlayMode();
-
                 break;
             case R.id.btnLast:
                 mainActivity.LastItem();
@@ -135,11 +138,20 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 mainActivity.NextItem();
                 break;
             case R.id.btnPlay:
-                mainActivity.Play_Pause();
+                Play_Pause();
                 break;
             default:
                 break;
         }
+    }
+
+    /**
+     * 返回键关闭抽屉界面
+     **/
+    @Override
+    public void onBackPressed() {
+        unregisterReceiver( lyricActivityReceiver );
+        LyricActivity.this.finish();
     }
 
     /**
@@ -191,29 +203,39 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      **/
     public void LoadLyric(String MusicName) {
         final String musicName = MusicName;
+        isComponentLocked = true;
         if (lyricArray != null) {
-            if (lyricArray.size() != 0) {
+            if (sizeOfList != 0) {
                 lyricArray.clear();
+                sizeOfList = 0;
             }
+            isLyricPrepared = false;
             lyricView.setLyric( "Searching local lyric ......" );
             lyricView.invalidate();
             new Thread( new Runnable() {
                 @Override
                 public void run() {
-                    lyricParsing = new LyricParsing( musicName );
+                    lyricParsing = new LyricParsing( CurrentMusicItem );
                     if (lyricParsing.LyricArray.size() == 0) {
-                        isLyricPrepared = false;
                         HandlerLyric.post( new Runnable() {
                             @Override
                             public void run() {
                                 lyricView.setLyric( "No match to lyric." );
                                 lyricView.invalidate();
+                                Index = 0;
                             }
                         } );
                     } else {
                         lyricArray = lyricParsing.LyricArray;
+                        sizeOfList = lyricArray.size();
                         isLyricPrepared = true;
+//                        Intent Intent_Lyric = new Intent( TransportFlag.MusicService );
+//                        Intent_Lyric.putExtra( TransportFlag.LoadLyric ,lyricParsing );
+//                        Intent_Lyric.putExtra( TransportFlag.State,TransportFlag.LoadLyric );
+//                        //将歌词路径和解析发给MainActivity中的音乐数组
+//                        sendBroadcast( Intent_Lyric );
                     }
+                    isComponentLocked = false;
                 }
             } ).start();
         }
@@ -222,21 +244,47 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     /**
      * 绘制歌词
      **/
-    public void DrawLyric(int CurrentTime) {
-        final int CurrentPosition = CurrentTime;
-        if (isLyricPrepared) {
-            HandlerLyric.post( new Runnable() {
-                @Override
-                public void run() {
-                    if (lyricArray.get( index ).getTime() - CurrentPosition < 200) {
-                        lyricView.setLyric( lyricArray.get( index ).getLyric() );
-                        lyricView.invalidate();
-                        index++;
-                        Log.e( "time", lyricArray.get( index ).getTime() + "" );
-                        Log.e( "lyric", lyricArray.get( index ).getLyric() );
-                    }
-                }
-            } );
+    public void DrawLyric() {
+        HandlerLyric.post( new Runnable() {
+            @Override
+            public void run() {
+                lyricView.setLyric( lyricArray.get( Index ).getLyric() );
+                lyricView.invalidate();
+            }
+        } );
+    }
+
+    /**
+     * 调整索引位置
+     **/
+    public void AdjustIndex(int CurrentTime) {
+        if (Index == 0) {                           //索引位于数组首位
+            if (CurrentTime < lyricArray.get( Index + 1 ).getTime()) {
+                Log.e( "索引位于数组首位","在本数组范围内" );
+                DrawLyric();
+            } else {
+                Index++;
+                Log.e( "索引位于数组首位","在本数组之后" );
+                AdjustIndex( CurrentTime );
+            }
+        } else if (Index == sizeOfList - 1) {       //索引位于数组末位
+            Log.e( "索引位于数组末位","重复歌词" );
+            DrawLyric();
+        } else {                                    //索引位于数组中间
+            if (CurrentTime < lyricArray.get( Index ).getTime() - 500) {
+                Log.e( "后退       ","在本数组之前" );
+                Index--;
+                Log.e( "Index;",Index+"" );
+                AdjustIndex( CurrentTime );
+            } else if (CurrentTime < lyricArray.get( Index + 1 ).getTime() - 500) {
+                Log.e( "索引位于数组中间","重复歌词" );
+                DrawLyric();
+            } else {
+                Log.e( "前进       ","在本数组之后" );
+                Index++;
+                Log.e( "Index;",Index+"" );
+                AdjustIndex( CurrentTime );
+            }
         }
     }
 
@@ -274,6 +322,31 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     }
 
     /**
+     * 播放和暂停切换
+     **/
+    public void Play_Pause() {
+        Intent Intent_PlayPause = new Intent( TransportFlag.LyricActivity );
+        if (mtvName.getText().toString().equals( "Music Name" )) {
+            Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.PlayDefault );
+        } else {
+            switch (mbtnPlay.getText().toString()) {
+                case "PLAY":
+                    Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.Play );
+                    mbtnPlay.setText( "PAUSE" );
+                    break;
+                case "PAUSE":
+                    Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.Pause );
+                    mbtnPlay.setText( "PLAY" );
+                    break;
+                default:
+                    break;
+            }
+        }
+        //Service播放或者暂停播放器      测试完毕
+        sendBroadcast( Intent_PlayPause );
+    }
+
+    /**
      * 接收器
      **/
     class LyricActivityReceiver extends BroadcastReceiver {
@@ -300,14 +373,15 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                     break;
                 case TransportFlag.NextItem:                                            //接收下一首
                     isLyricPrepared = false;
-                    String NextMusicName = intent.getStringExtra( TransportFlag.NextItem );
-                    LoadLyric( NextMusicName );
                     break;
                 case TransportFlag.LyricTo:                                             //接收当前歌词位置    测试完毕
                     int CurrentPosition = intent.getIntExtra( "CurrentPosition", 0 );
-                    DrawLyric( CurrentPosition );
+                    Log.e( "CurrentPosition", CurrentPosition + "" );
+                    if (isLyricPrepared) {
+                        AdjustIndex( CurrentPosition );
+                    }
                     break;
-                case TransportFlag.Prepare:                                             //接收播放准备
+                case TransportFlag.Prepare:                                             //接收播放准备        测试完毕
                     CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.Prepare );
                     mtvName.setText( CurrentMusicItem.getMusicName() );
                     LoadLyric( CurrentMusicItem.getMusicName() );

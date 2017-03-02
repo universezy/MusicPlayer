@@ -90,7 +90,6 @@ public class MusicService extends Service {
                     //更新拖动条信息给MainActivity      测试完毕
                     sendBroadcast( Intent_UpdateSeekBar );
                     HandlerService.postDelayed( RunnableSeekbar, 1000 );
-                    Log.e( "getCurrentPosition", mediaplayer.getCurrentPosition() + "" );
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -106,7 +105,7 @@ public class MusicService extends Service {
                 Intent_UpdateLyric.putExtra( TransportFlag.State, TransportFlag.LyricTo );
                 //更新歌词给LyricActivity
                 sendBroadcast( Intent_UpdateLyric );
-                HandlerService.postDelayed( RunnableLyric, 200 );
+                HandlerService.postDelayed( RunnableLyric, 500 );
             }
         };
     }
@@ -178,7 +177,9 @@ public class MusicService extends Service {
                         }
                     }
                     cursor.close();
-
+                    for(MusicBean musicBean:mMusicList){
+                        Log.e("TITLE",musicBean.getMusicName());
+                    }
                     ModeSetting( mode );
                     sendMusicList( mMusicList );
                 }
@@ -246,8 +247,8 @@ public class MusicService extends Service {
                         Intent_SeekPrepare.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getDuration() ) ) );
                         Intent_SeekPrepare.putExtra( TransportFlag.State, TransportFlag.SeekPrepare );
                         //发送拖动条最大值和置0给Activity      测试完毕
-
                         sendBroadcast( Intent_SeekPrepare );
+
                         Intent Intent_Prepare = new Intent( TransportFlag.MusicService );
                         Intent_Prepare.putExtra( TransportFlag.Prepare, mMusicList.get( ItemLocationIndex ) );
                         Intent_Prepare.putExtra( TransportFlag.State, TransportFlag.Prepare );

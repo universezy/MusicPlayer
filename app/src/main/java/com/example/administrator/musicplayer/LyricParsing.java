@@ -9,23 +9,25 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class LyricParsing {
-    private String MusicName;
+public class LyricParsing implements Serializable {
+    public String MusicName;
     private String strArtist;
     private String strTitle;
     private String strAlbum;
     private String strBy;
     private int offset;
     public ArrayList<LyricItem> LyricArray = new ArrayList<>();
-    private String pathLyric;
+    public String pathLyric;
 
-    public LyricParsing(String MusicName) {
-        this.MusicName = MusicName;
+    public LyricParsing(MusicBean musicBean) {
+        this.MusicName = musicBean.getMusicName();
+        if(musicBean.getLyricPath() != null)return;
         //检测SD卡是否存在
         if (Environment.getExternalStorageState().equals( Environment.MEDIA_MOUNTED )) {
             Traverse( Environment.getExternalStorageDirectory() );
@@ -60,6 +62,7 @@ public class LyricParsing {
      * 解析歌词文件
      **/
     public void Parsing() {
+        if(LyricArray!=null)return;
         File file = new File( this.pathLyric );
         try {
             FileInputStream fileInputStream = new FileInputStream( file );

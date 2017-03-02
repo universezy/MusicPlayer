@@ -100,9 +100,9 @@
         android:layout_weight="68"
         android:background="@color/silver"
         android:gravity="center"
-        android:text="Lyric"
+        android:text=""
         android:textColor="@color/black"
-        android:textSize="30dp"/>
+        android:textSize="20dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"

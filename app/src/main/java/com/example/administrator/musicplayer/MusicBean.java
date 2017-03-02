@@ -1,12 +1,15 @@
 package com.example.administrator.musicplayer;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 class MusicBean implements Serializable {
     private String musicName;
     private String musicPath;
     private String musicArtist;
     private String musicAlbum;
+    private String lyricPath;
+    private ArrayList<LyricItem> lyricList = new ArrayList();
 
     String getMusicName() {
         return musicName;
@@ -38,5 +41,21 @@ class MusicBean implements Serializable {
 
     void setMusicAlbum(String musicAlbum) {
         this.musicAlbum = musicAlbum;
+    }
+
+    String getLyricPath() {
+        return lyricPath;
+    }
+
+    void setLyricPath(String lyricPath) {
+        this.lyricPath = lyricPath;
+    }
+
+    ArrayList<LyricItem> getLyricList() {
+        return lyricList;
+    }
+
+    void setLyricList(ArrayList<LyricItem> lyricList) {
+        this.lyricList = lyricList;
     }
 }
