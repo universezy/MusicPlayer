@@ -2,10 +2,12 @@ package com.example.administrator.musicplayer;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -45,7 +47,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     //当前播放条目
     private MusicBean CurrentMusicItem;
     //歌词内容列表
-    private ArrayList<LyricItem> lyricArray;
+    private ArrayList<LyricItem> lyricArray = new ArrayList();
     //接收器
     private LyricActivityReceiver lyricActivityReceiver = new LyricActivityReceiver();
     //处理器
@@ -54,6 +56,8 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     private int index;
     //歌词加载标识
     private boolean isLyricPrepared = false;
+    //播放模式序号
+    public int PlayMode = 0, mode = 0;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -117,10 +121,12 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
         if (mainActivity.isComponentLocked) return;
         switch (v.getId()) {
             case R.id.btnBack:
+                unregisterReceiver( lyricActivityReceiver );
                 LyricActivity.this.finish();
                 break;
             case R.id.btnMode:
-                mainActivity.setPlayMode();
+                setPlayMode();
+
                 break;
             case R.id.btnLast:
                 mainActivity.LastItem();
@@ -175,6 +181,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 mtvName.setText( "Name : " + CurrentMusicItem.getMusicName() );
                 mtvArtist.setText( "Artist : " + CurrentMusicItem.getMusicArtist() );
                 mtvAlbum.setText( "Album : " + CurrentMusicItem.getMusicAlbum() );
+                mode = mainActivity.mode;
             }
         } );
     }
@@ -184,16 +191,32 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      **/
     public void LoadLyric(String MusicName) {
         final String musicName = MusicName;
-        if (lyricArray != null)
-            lyricArray.clear();
-        new Thread( new Runnable() {
-            @Override
-            public void run() {
-                lyricParsing = new LyricParsing( musicName );
-                lyricArray = lyricParsing.LyricArray;
-                isLyricPrepared = true;
+        if (lyricArray != null) {
+            if (lyricArray.size() != 0) {
+                lyricArray.clear();
             }
-        } ).start();
+            lyricView.setLyric( "Searching local lyric ......" );
+            lyricView.invalidate();
+            new Thread( new Runnable() {
+                @Override
+                public void run() {
+                    lyricParsing = new LyricParsing( musicName );
+                    if (lyricParsing.LyricArray.size() == 0) {
+                        isLyricPrepared = false;
+                        HandlerLyric.post( new Runnable() {
+                            @Override
+                            public void run() {
+                                lyricView.setLyric( "No match to lyric." );
+                                lyricView.invalidate();
+                            }
+                        } );
+                    } else {
+                        lyricArray = lyricParsing.LyricArray;
+                        isLyricPrepared = true;
+                    }
+                }
+            } ).start();
+        }
     }
 
     /**
@@ -215,6 +238,39 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 }
             } );
         }
+    }
+
+    /**
+     * 播放模式设定
+     **/
+    public void setPlayMode() {
+        /** 消息框形式弹出选项：顺序播放，单曲循环，随机播放。默认：顺序播放 **/
+        new AlertDialog.Builder( LyricActivity.this )
+                .setTitle( "Set PlayMode" )
+                .setIcon( android.R.drawable.ic_dialog_info )
+                .setSingleChoiceItems( getResources().getStringArray( R.array.play_mode ), PlayMode,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                mode = which;
+                            }
+                        }
+                )
+                .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mbtnMode.setText( getResources().getStringArray( R.array.play_mode )[mode] );
+                        PlayMode = mode;
+                        mainActivity.mode = mode;
+                        mainActivity.PlayMode = mode;
+                        Intent Intent_PlayMode = new Intent( TransportFlag.MainActivity );
+                        Intent_PlayMode.putExtra( TransportFlag.Mode, PlayMode );
+                        Intent_PlayMode.putExtra( TransportFlag.State, TransportFlag.Mode );
+                        //将播放模式传给Service        测试完毕
+                        sendBroadcast( Intent_PlayMode );
+                        dialog.dismiss();
+                    }
+                } )
+                .show();
     }
 
     /**

@@ -136,6 +136,7 @@ public class MusicService extends Service {
         mediaplayer.release();
         //将线程销毁掉
         HandlerService.removeCallbacks( RunnableSeekbar );
+        HandlerService.removeCallbacks( RunnableLyric );
         unregisterReceiver( musicServiceReceiver );
         super.onDestroy();
     }

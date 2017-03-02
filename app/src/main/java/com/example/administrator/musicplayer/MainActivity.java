@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements
     //当前播放条目
     public MusicBean CurrentMusicItem;
     //播放模式序号
-    private int PlayMode = 0, mode = 0;
+    public int PlayMode = 0, mode = 0;
     //分享类型
     final static int ShareByQQ = 0, ShareByWechat = 1;
     //发送类型
@@ -226,7 +226,8 @@ public class MainActivity extends AppCompatActivity implements
         searchView.clearFocus();
         if (isComponentLocked) return;
         switch (v.getId()) {
-            case R.id.tvName:
+            case R.id.tvName:           //歌词页
+                if (mtvName.getText().toString().equals( "Music Name" )) return;
                 Intent intent_LyricActivity = new Intent( MainActivity.this, LyricActivity.class );
                 startActivity( intent_LyricActivity );
                 break;
