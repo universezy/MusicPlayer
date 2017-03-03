@@ -24,6 +24,7 @@ public class WeChatShareUtil {
     private IWXAPI api;
     private Context context;
     public static WeChatShareUtil weChatShareUtil;
+    public String regResult = " null ";
 
     public static WeChatShareUtil getInstance(Context context) {
         if (weChatShareUtil == null) {
@@ -42,7 +43,9 @@ public class WeChatShareUtil {
         //通过WXAPIFactory工厂，获取IWXAPI的实例
         api = WXAPIFactory.createWXAPI( context, APP_ID, true );
         //将应用的appId注册到微信
-        api.registerApp( APP_ID );
+        if (api.registerApp( APP_ID ) == true) {
+            regResult = " Successful";
+        }
     }
 
     /**

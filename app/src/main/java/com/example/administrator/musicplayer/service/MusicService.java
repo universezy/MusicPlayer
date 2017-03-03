@@ -15,12 +15,21 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import com.example.administrator.musicplayer.datastructure.LyricItem;
 import com.example.administrator.musicplayer.datastructure.MusicBean;
 import com.example.administrator.musicplayer.tool.TransportFlag;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Random;
 
@@ -48,6 +57,8 @@ public class MusicService extends Service {
      **/
     //播放列表
     public ArrayList<MusicBean> mMusicList = new ArrayList<>();
+    //歌词列表
+    public ArrayList<File> LyricList = new ArrayList<>();
     //播放列表索引
     public int ItemLocationIndex = 0;
     //播放顺序数组
@@ -56,6 +67,18 @@ public class MusicService extends Service {
     private int PlayArrayIndex = 0;
     //播放模式序号
     private int mode = 0;
+    //状态码
+    boolean STATUS_UNFINISH = false, STATUS_FINISH = true, STATUS_FAILURE = false, STATUS_SUCCESSFUL = true;
+    //扫描音乐线程结束标识
+    boolean isScanMusicItemFinished = STATUS_UNFINISH;
+    //扫描歌词线程结束标识
+    boolean isScanLyricFinished = STATUS_UNFINISH;
+    //匹配线程结束标识
+    boolean isMatchFinished = STATUS_UNFINISH;
+    //扫描音乐线程结果标识
+    boolean Status_MusicItem = STATUS_FAILURE;
+    //扫描歌词线程结果标识
+    boolean Status_Lyric = STATUS_SUCCESSFUL;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -151,6 +174,28 @@ public class MusicService extends Service {
      * 载入歌曲
      **/
     public void LoadMusic() {
+        ScanMusicItem();
+        ScanLyric();
+        while (!(isScanMusicItemFinished && isScanLyricFinished)) {}
+        MatchMusicItemWithLyric();
+        while (!isMatchFinished) {}
+        ModeSetting( mode );
+        sendMusicList( );
+    }
+
+    /**
+     * 获取音乐属性
+     **/
+    public String getMusicAttribution(Cursor cursor, String type) {
+        return cursor.getString( cursor.getColumnIndexOrThrow( type ) )
+                .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
+                .replaceAll( ".mp3", "" );
+    }
+
+    /**
+     * 扫描音乐信息
+     **/
+    public void ScanMusicItem() {
         new Thread( new Runnable() {
             @Override
             public void run() {
@@ -180,31 +225,144 @@ public class MusicService extends Service {
                         }
                     }
                     cursor.close();
-                    for(MusicBean musicBean:mMusicList){
-                        Log.e("TITLE",musicBean.getMusicName());
-                    }
-                    ModeSetting( mode );
-                    sendMusicList( mMusicList );
+                    Status_MusicItem = STATUS_SUCCESSFUL;
                 }
+                isScanMusicItemFinished = STATUS_FINISH;
             }
         } ).start();
     }
 
     /**
-     * 获取音乐属性
+     * 扫描歌词文件
      **/
-    public String getMusicAttribution(Cursor cursor, String type) {
-        return cursor.getString( cursor.getColumnIndexOrThrow( type ) )
-                .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
-                .replaceAll( ".mp3", "" );
+    public void ScanLyric() {
+        //检测SD卡是否存在
+        if (Environment.getExternalStorageState().equals( Environment.MEDIA_MOUNTED )) {
+            Traverse( Environment.getExternalStorageDirectory() );
+            isScanLyricFinished = STATUS_FINISH;
+        }
+    }
+
+    /**
+     * 遍历手机SD卡查找匹配的歌词文件
+     **/
+    private void Traverse(File root) {
+        File files[] = root.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    Traverse( f );
+                } else {
+                    if (f.getName().endsWith( ".lrc" )) {
+                        LyricList.add( f );
+                        Status_Lyric = STATUS_SUCCESSFUL;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 解析歌词文件
+     **/
+    public void Parsing(MusicBean music) {
+        final MusicBean musicBean = music;
+        File file = new File( musicBean.getLyricPath() );
+        ArrayList<LyricItem> LyricArray = new ArrayList<>();
+        try {
+            FileInputStream fileInputStream = new FileInputStream( file );
+            InputStreamReader inputStreamReader = new InputStreamReader( fileInputStream, "utf-8" );
+            BufferedReader bufferedReader = new BufferedReader( inputStreamReader );
+            String s;
+            int index;
+            while ((s = bufferedReader.readLine()) != null) {
+                if ((index = s.indexOf( "[ar:" )) != -1) {
+                    //     this.strArtist = s.substring( index + 4, s.indexOf( "]" ) );
+                } else if ((index = s.indexOf( "[ti:" )) != -1) {
+                    //     this.strTitle = s.substring( index + 4, s.indexOf( "]" ) );
+                } else if ((index = s.indexOf( "[al:" )) != -1) {
+                    //     this.strAlbum = s.substring( index + 4, s.indexOf( "]" ) );
+                } else if ((index = s.indexOf( "[by:" )) != -1) {
+                    //     this.strBy = s.substring( index + 4, s.indexOf( "]" ) );
+                } else if ((index = s.indexOf( "[offset:" )) != -1) {
+                    //     this.offset = Integer.parseInt( s.substring( index + 8, s.indexOf( "]" ) ) );
+                } else if (s.indexOf( ":" ) != -1 && s.indexOf( "." ) != -1) {
+                    //分离出歌词内容
+                    String StrLyric = s.substring( s.lastIndexOf( "]" ) + 1 );
+                    //分离出时间
+                    String tempTime = s.substring( 0, s.lastIndexOf( "]" ) );
+                    //多个时间点重复相同歌词
+                    if (tempTime.indexOf( "][" ) != -1) {
+                        String[] temp1 = tempTime.split( "]" );
+                        for (String str : temp1) {
+                            LyricItem lyricItem = new LyricItem();
+                            int time;
+                            int minute = Integer.parseInt( str.substring( str.indexOf( "[" ) + 1, str.indexOf( ":" ) ) );
+                            int second = Integer.parseInt( str.substring( str.indexOf( ":" ) + 1, str.indexOf( "." ) ) );
+                            int millisecond = Integer.parseInt( str.substring( str.indexOf( "." ) + 1 ) );
+                            time = minute * 60000 + second * 1000 + millisecond;
+                            lyricItem.setLyric( StrLyric );
+                            lyricItem.setTime( time );
+                            LyricArray.add( lyricItem );
+                        }
+                    }
+                    //一个时间点对应一个歌词
+                    else {
+                        LyricItem lyricItem = new LyricItem();
+                        int time;
+                        int minute = Integer.parseInt( tempTime.substring( tempTime.indexOf( "[" ) + 1, tempTime.indexOf( ":" ) ) );
+                        int second = Integer.parseInt( tempTime.substring( tempTime.indexOf( ":" ) + 1, tempTime.indexOf( "." ) ) );
+                        int millisecond = Integer.parseInt( tempTime.substring( tempTime.indexOf( "." ) + 1 ) );
+                        time = minute * 60000 + second * 1000 + millisecond;
+                        lyricItem.setLyric( StrLyric );
+                        lyricItem.setTime( time );
+                        LyricArray.add( lyricItem );
+                    }
+                }
+            }
+            bufferedReader.close();
+            inputStreamReader.close();
+            fileInputStream.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Collections.sort( LyricArray, new SortByTime() );
+        musicBean.setLyricList( LyricArray );
+    }
+
+    /**
+     * 将歌词和音乐匹配
+     **/
+    public void MatchMusicItemWithLyric() {
+        if (Status_MusicItem && Status_Lyric) {
+            new Thread( new Runnable() {
+                @Override
+                public void run() {
+                    for (MusicBean musicBean : mMusicList) {
+                        for (File file : LyricList) {
+                            if (musicBean.getMusicName().replace( " ", "" ).equals( file.getName().replace( " ", "" ).replace( ".lrc", "" ) )) {
+                                musicBean.setLyricPath( file.getAbsolutePath() );
+                                Parsing( musicBean );
+                                break;
+                            }
+                        }
+                    }
+                    isMatchFinished = STATUS_FINISH;
+                }
+            } ).start();
+        }
     }
 
     /**
      * 发送列表给Service
      **/
-    public void sendMusicList(ArrayList<MusicBean> MusicList) {
+    public void sendMusicList() {
         Intent Intent_SendMusicList = new Intent( TransportFlag.MusicService );
-        Intent_SendMusicList.putExtra( "mMusicList", MusicList );
+        Intent_SendMusicList.putExtra( "mMusicList", mMusicList );
         Intent_SendMusicList.putExtra( TransportFlag.State, TransportFlag.LoadMusic );
         //将播放列表发给MainActivity        测试完毕
         sendBroadcast( Intent_SendMusicList );
@@ -376,5 +534,21 @@ public class MusicService extends Service {
      * 绑定类
      **/
     public class ServiceBinder extends Binder {
+    }
+
+    /**
+     * 按时间排序
+     **/
+    class SortByTime implements Comparator {
+        public int compare(Object o1, Object o2) {
+            LyricItem l1 = (LyricItem) o1;
+            LyricItem l2 = (LyricItem) o2;
+            if (l1.getTime() > l2.getTime())
+                return 1;
+            else if (l1.getTime() == l2.getTime()) {
+                return 0;
+            }
+            return -1;
+        }
     }
 }

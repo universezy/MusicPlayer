@@ -1,6 +1,8 @@
 package com.example.administrator.musicplayer.datastructure;
 
-public class LyricItem {
+import java.io.Serializable;
+
+public class LyricItem implements Serializable {
     private int time;
     private String lyric;
 

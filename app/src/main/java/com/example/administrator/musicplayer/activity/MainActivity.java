@@ -37,13 +37,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.administrator.musicplayer.R;
 import com.example.administrator.musicplayer.datastructure.MusicBean;
 import com.example.administrator.musicplayer.service.MusicService;
-import com.example.administrator.musicplayer.R;
+import com.example.administrator.musicplayer.tool.ListAdapter;
 import com.example.administrator.musicplayer.tool.ShareListener;
 import com.example.administrator.musicplayer.tool.TransportFlag;
 import com.example.administrator.musicplayer.tool.WeChatShareUtil;
-import com.example.administrator.musicplayer.tool.ListAdapter;
 import com.tencent.connect.share.QQShare;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
@@ -236,6 +236,9 @@ public class MainActivity extends AppCompatActivity implements
             case R.id.tvName:           //歌词页
                 if (mtvName.getText().toString().equals( "Music Name" )) return;
                 Intent intent_LyricActivity = new Intent( MainActivity.this, LyricActivity.class );
+               // Bundle bundle=new Bundle();
+               // bundle.putSerializable("mMusicList",mMusicList );
+               // intent_LyricActivity.putExtras( bundle );
                 startActivity( intent_LyricActivity );
                 break;
             case R.id.btnMore:          //扩展
@@ -591,6 +594,7 @@ public class MainActivity extends AppCompatActivity implements
 //                        req.scene = SendMessageToWX.Req.WXSceneSession;
 //                        iwxapi.sendReq( req );
                         weChatShareUtil = WeChatShareUtil.getInstance( MainActivity.this );
+                        Log.e( "RESULT",weChatShareUtil.regResult );
                         boolean result;
                         // result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
                         result = weChatShareUtil.shareText( "test-----", SendMessageToWX.Req.WXSceneSession );

@@ -15,11 +15,9 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.example.administrator.musicplayer.datastructure.LyricItem;
-import com.example.administrator.musicplayer.tool.LyricParsing;
+import com.example.administrator.musicplayer.R;
 import com.example.administrator.musicplayer.datastructure.LyricView;
 import com.example.administrator.musicplayer.datastructure.MusicBean;
-import com.example.administrator.musicplayer.R;
 import com.example.administrator.musicplayer.tool.TransportFlag;
 
 import java.text.SimpleDateFormat;
@@ -49,12 +47,10 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      **/
     //主Activity实例
     private MainActivity mainActivity;
-    //歌词解析实例
-    private LyricParsing lyricParsing;
+    //播放列表
+    private ArrayList<MusicBean> mMusicList = new ArrayList<>();
     //当前播放条目
     private MusicBean CurrentMusicItem;
-    //歌词内容列表
-    private ArrayList<LyricItem> lyricArray = new ArrayList();
     //接收器
     private LyricActivityReceiver lyricActivityReceiver = new LyricActivityReceiver();
     //处理器
@@ -78,7 +74,6 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     protected void onCreate(Bundle savedInstance) {
         super.onCreate( savedInstance );
         setContentView( R.layout.activity_music_item );
-
         this.mainActivity = MainActivity.mainActivity;
         InitLayout();
 
@@ -188,7 +183,6 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      */
     public void InitComponent() {
         CurrentMusicItem = mainActivity.CurrentMusicItem;
-        LoadLyric( CurrentMusicItem.getMusicName() );
         HandlerLyric.post( new Runnable() {
             @Override
             public void run() {
@@ -201,6 +195,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 mtvArtist.setText( "Artist : " + CurrentMusicItem.getMusicArtist() );
                 mtvAlbum.setText( "Album : " + CurrentMusicItem.getMusicAlbum() );
                 mode = mainActivity.mode;
+                LoadLyric();
             }
         } );
     }
@@ -208,22 +203,16 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     /**
      * 加载歌词资源
      **/
-    public void LoadLyric(String MusicName) {
-        final String musicName = MusicName;
+    public void LoadLyric() {
         isComponentLocked = true;
-        if (lyricArray != null) {
-            if (sizeOfList != 0) {
-                lyricArray.clear();
-                sizeOfList = 0;
-            }
-            isLyricPrepared = false;
+        if (CurrentMusicItem.getLyricList() != null) {
             lyricView.setLyric( "Searching local lyric ......" );
+            isLyricPrepared = false;
             lyricView.invalidate();
             new Thread( new Runnable() {
                 @Override
                 public void run() {
-                    lyricParsing = new LyricParsing( CurrentMusicItem );
-                    if (lyricParsing.LyricArray.size() == 0) {
+                    if (CurrentMusicItem.getLyricList().size() == 0) {
                         HandlerLyric.post( new Runnable() {
                             @Override
                             public void run() {
@@ -233,8 +222,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                             }
                         } );
                     } else {
-                        lyricArray = lyricParsing.LyricArray;
-                        sizeOfList = lyricArray.size();
+                        sizeOfList = CurrentMusicItem.getLyricList().size();
                         isLyricPrepared = true;
                     }
                     isComponentLocked = false;
@@ -250,7 +238,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
         HandlerLyric.post( new Runnable() {
             @Override
             public void run() {
-                lyricView.setLyric( lyricArray.get( Index ).getLyric() );
+                lyricView.setLyric( CurrentMusicItem.getLyricList().get( Index ).getLyric() );
                 lyricView.invalidate();
             }
         } );
@@ -261,30 +249,30 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      **/
     public void AdjustIndex(int CurrentTime) {
         if (Index == 0) {                           //索引位于数组首位
-            if (CurrentTime < lyricArray.get( Index + 1 ).getTime()) {
-                Log.e( "索引位于数组首位","在本数组范围内" );
+            if (CurrentTime < CurrentMusicItem.getLyricList().get( Index + 1 ).getTime()) {
+                Log.e( "索引位于数组首位", "在本数组范围内" );
                 DrawLyric();
             } else {
                 Index++;
-                Log.e( "索引位于数组首位","在本数组之后" );
+                Log.e( "索引位于数组首位", "在本数组之后" );
                 AdjustIndex( CurrentTime );
             }
         } else if (Index == sizeOfList - 1) {       //索引位于数组末位
-            Log.e( "索引位于数组末位","重复歌词" );
+            Log.e( "索引位于数组末位", "重复歌词" );
             DrawLyric();
         } else {                                    //索引位于数组中间
-            if (CurrentTime < lyricArray.get( Index ).getTime() - 500) {
-                Log.e( "后退       ","在本数组之前" );
+            if (CurrentTime < CurrentMusicItem.getLyricList().get( Index ).getTime() - 500) {
+                Log.e( "后退       ", "在本数组之前" );
                 Index--;
-                Log.e( "Index;",Index+"" );
+                Log.e( "Index;", Index + "" );
                 AdjustIndex( CurrentTime );
-            } else if (CurrentTime < lyricArray.get( Index + 1 ).getTime() - 500) {
-                Log.e( "索引位于数组中间","重复歌词" );
+            } else if (CurrentTime < CurrentMusicItem.getLyricList().get( Index + 1 ).getTime() - 500) {
+                Log.e( "索引位于数组中间", "重复歌词" );
                 DrawLyric();
             } else {
-                Log.e( "前进       ","在本数组之后" );
+                Log.e( "前进       ", "在本数组之后" );
                 Index++;
-                Log.e( "Index;",Index+"" );
+                Log.e( "Index;", Index + "" );
                 AdjustIndex( CurrentTime );
             }
         }
@@ -327,7 +315,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      * 播放和暂停切换
      **/
     public void Play_Pause() {
-        Intent Intent_PlayPause = new Intent( TransportFlag.LyricActivity );
+        Intent Intent_PlayPause = new Intent( TransportFlag.MainActivity );
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.PlayDefault );
         } else {
@@ -335,10 +323,12 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 case "PLAY":
                     Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.Play );
                     mbtnPlay.setText( "PAUSE" );
+                    mainActivity.mbtnPlay.setText( "PAUSE" );
                     break;
                 case "PAUSE":
                     Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.Pause );
                     mbtnPlay.setText( "PLAY" );
+                    mainActivity.mbtnPlay.setText( "PLAY" );
                     break;
                 default:
                     break;
@@ -359,6 +349,10 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
             String strState = intent.getStringExtra( TransportFlag.State );
             //Log.e( TransportFlag.State, strState );
             switch (strState) {
+                case TransportFlag.LoadMusic:                                           //接收加载音乐列表     测试完毕
+                    mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));
+                    CurrentMusicItem = mMusicList.get( 0 );
+                    break;
                 case TransportFlag.SeekTo:                                              //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
                     strTextViewTo = intent.getStringExtra( "TextViewTo" );
@@ -378,7 +372,6 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                     break;
                 case TransportFlag.LyricTo:                                             //接收当前歌词位置    测试完毕
                     int CurrentPosition = intent.getIntExtra( "CurrentPosition", 0 );
-                    Log.e( "CurrentPosition", CurrentPosition + "" );
                     if (isLyricPrepared) {
                         AdjustIndex( CurrentPosition );
                     }
@@ -386,7 +379,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 case TransportFlag.Prepare:                                             //接收播放准备        测试完毕
                     CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.Prepare );
                     mtvName.setText( CurrentMusicItem.getMusicName() );
-                    LoadLyric( CurrentMusicItem.getMusicName() );
+                    LoadLyric();
                     break;
                 default:
                     break;
