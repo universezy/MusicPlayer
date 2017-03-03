@@ -262,10 +262,10 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
         } else if (Index == sizeOfList - 1) {       //索引位于数组末位
             DrawLyric();
         } else {                                    //索引位于数组中间
-            if (CurrentTime < CurrentMusicItem.getLyricList().get( Index ).getTime() - 500) {
+            if (CurrentTime < CurrentMusicItem.getLyricList().get( Index ).getTime() - 300) {
                 Index--;
                 AdjustIndex( CurrentTime );
-            } else if (CurrentTime < CurrentMusicItem.getLyricList().get( Index + 1 ).getTime() - 500) {
+            } else if (CurrentTime < CurrentMusicItem.getLyricList().get( Index + 1 ).getTime() - 300) {
                 DrawLyric();
             } else {
                 Index++;

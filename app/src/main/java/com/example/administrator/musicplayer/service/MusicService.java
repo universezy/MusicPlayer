@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
 import com.example.administrator.musicplayer.activity.MainActivity;
 import com.example.administrator.musicplayer.datastructure.LyricItem;
@@ -90,6 +91,7 @@ public class MusicService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
         this.mainActivity = MainActivity.mainActivity;
 
         //注册接收器
@@ -135,7 +137,7 @@ public class MusicService extends Service {
                 Intent_UpdateLyric.putExtra( TransportFlag.State, TransportFlag.LyricTo );
                 //更新歌词给LyricActivity
                 sendBroadcast( Intent_UpdateLyric );
-                HandlerService.postDelayed( RunnableLyric, 500 );
+                HandlerService.postDelayed( RunnableLyric, 300 );
             }
         };
     }
@@ -185,8 +187,8 @@ public class MusicService extends Service {
         MatchMusicItemWithLyric();
         while (!isMatchFinished) {
         }
-        ModeSetting( mode );
         sendMusicList();
+        ModeSetting( mode );
     }
 
     /**
@@ -243,10 +245,15 @@ public class MusicService extends Service {
      **/
     public void ScanLyric() {
         //检测SD卡是否存在
-        if (Environment.getExternalStorageState().equals( Environment.MEDIA_MOUNTED )) {
-            Traverse( Environment.getExternalStorageDirectory() );
-            isScanLyricFinished = STATUS_FINISH;
-        }
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                if (Environment.getExternalStorageState().equals( Environment.MEDIA_MOUNTED )) {
+                    Traverse( Environment.getExternalStorageDirectory() );
+                    isScanLyricFinished = STATUS_FINISH;
+                }
+            }
+        } ).start();
     }
 
     /**
@@ -441,13 +448,13 @@ public class MusicService extends Service {
                             public void run() {
                                 playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
                             }
-                        }, 3000 );
+                        }, 2000 );
                     }
                 } );
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            HandlerService.postDelayed( RunnablePlay, 2000 );
+            HandlerService.postDelayed( RunnablePlay, 1000 );
         }
     }
 

@@ -128,21 +128,33 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstance) {
         super.onCreate( savedInstance );
-        setContentView( R.layout.activity_main );
         this.mainActivity = this;
-
+        //显示欢迎界面
+        setContentView( R.layout.activity_main );
         findViewById( R.id.switch_main ).setVisibility( View.GONE );
         //设置抽屉视图关闭手势滑动
         drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
-        drawerLayout.setDrawerLockMode( DrawerLayout.LOCK_MODE_LOCKED_CLOSED );
-
-        //注册接收器
-        IntentFilter intentFilter = new IntentFilter( TransportFlag.MusicService );
-        registerReceiver( mainActivityReceiver, intentFilter );
-
-        //绑定服务
-        Intent intent = new Intent( this, MusicService.class );
-        bindService( intent, serviceConnection, Context.BIND_AUTO_CREATE );
+        InitLayout();
+        //延迟显示主界面
+        HandlerMain.postDelayed( new Runnable() {
+            @Override
+            public void run() {
+                findViewById( R.id.switch_welcome ).setVisibility( View.GONE );
+                findViewById( R.id.switch_main ).setVisibility( View.VISIBLE );
+            }
+        }, 3000 );
+        //启动Service
+        HandlerMain.postDelayed( new Runnable() {
+            @Override
+            public void run() {
+                //注册接收器
+                IntentFilter intentFilter = new IntentFilter( TransportFlag.MusicService );
+                registerReceiver( mainActivityReceiver, intentFilter );
+                //绑定服务
+                Intent intent = new Intent( MainActivity.this, MusicService.class );
+                bindService( intent, serviceConnection, Context.BIND_AUTO_CREATE );
+            }
+        }, 200 );
     }
 
     @Override
@@ -217,8 +229,6 @@ public class MainActivity extends AppCompatActivity implements
 
         //开启手势滑动
         drawerLayout.setDrawerLockMode( DrawerLayout.LOCK_MODE_UNLOCKED );
-
-        isComponentLocked = false;
     }
 
     /*****************************************************************************************
@@ -236,9 +246,6 @@ public class MainActivity extends AppCompatActivity implements
             case R.id.tvName:           //歌词页
                 if (mtvName.getText().toString().equals( "Music Name" )) return;
                 Intent intent_LyricActivity = new Intent( MainActivity.this, LyricActivity.class );
-                // Bundle bundle=new Bundle();
-                // bundle.putSerializable("mMusicList",mMusicList );
-                // intent_LyricActivity.putExtras( bundle );
                 startActivity( intent_LyricActivity );
                 break;
             case R.id.btnMore:          //扩展
@@ -781,14 +788,13 @@ public class MainActivity extends AppCompatActivity implements
                 case TransportFlag.LoadMusic:                                       //接收加载音乐列表     测试完毕
                     mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));
                     CurrentMusicItem = mMusicList.get( 0 );
-                    HandlerMain.postDelayed( new Runnable() {
+                    HandlerMain.post( new Runnable() {
                         @Override
                         public void run() {
-                            findViewById( R.id.switch_welcome ).setVisibility( View.GONE );
-                            findViewById( R.id.switch_main ).setVisibility( View.VISIBLE );
-                            InitLayout();
+                            listAdapter.setList( mMusicList );
+                            isComponentLocked = false;
                         }
-                    }, 3000 );
+                    } );
                     break;
                 case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
