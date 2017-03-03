@@ -13,8 +13,9 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
-import android.util.Log;
+import android.telephony.TelephonyManager;
 
+import com.example.administrator.musicplayer.activity.MainActivity;
 import com.example.administrator.musicplayer.datastructure.LyricItem;
 import com.example.administrator.musicplayer.datastructure.MusicBean;
 import com.example.administrator.musicplayer.tool.TransportFlag;
@@ -38,6 +39,8 @@ public class MusicService extends Service {
     /**
      * 工具实例
      **/
+    //主Activity实例
+    private MainActivity mainActivity;
     //媒体播放器
     private MediaPlayer mediaplayer = new MediaPlayer();
     //处理器
@@ -87,6 +90,7 @@ public class MusicService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        this.mainActivity = MainActivity.mainActivity;
 
         //注册接收器
         IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
@@ -176,11 +180,13 @@ public class MusicService extends Service {
     public void LoadMusic() {
         ScanMusicItem();
         ScanLyric();
-        while (!(isScanMusicItemFinished && isScanLyricFinished)) {}
+        while (!(isScanMusicItemFinished && isScanLyricFinished)) {
+        }
         MatchMusicItemWithLyric();
-        while (!isMatchFinished) {}
+        while (!isMatchFinished) {
+        }
         ModeSetting( mode );
-        sendMusicList( );
+        sendMusicList();
     }
 
     /**
@@ -484,6 +490,29 @@ public class MusicService extends Service {
     class MusicServiceReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            // 如果是拨打电话
+            if (intent.getAction().equals( Intent.ACTION_NEW_OUTGOING_CALL )) {
+                mediaplayer.pause();
+                mainActivity.mbtnPlay.setText( "PAUSE" );
+            }
+            // 如果是来电
+            else {
+                TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService( Service.TELEPHONY_SERVICE );
+                switch (telephonyManager.getCallState()) {
+                    case TelephonyManager.CALL_STATE_RINGING:       //响铃
+                        mediaplayer.pause();
+                        mainActivity.mbtnPlay.setText( "PAUSE" );
+                        break;
+                    case TelephonyManager.CALL_STATE_OFFHOOK:       //接听
+                        mediaplayer.pause();
+                        mainActivity.mbtnPlay.setText( "PAUSE" );
+                        break;
+                    case TelephonyManager.CALL_STATE_IDLE:          //挂断
+                        mediaplayer.start();
+                        mainActivity.mbtnPlay.setText( "PLAY" );
+                        break;
+                }
+            }
             String path;
             int progress;
             String state = intent.getStringExtra( TransportFlag.State );

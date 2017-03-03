@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
@@ -43,7 +42,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     private SeekBar seekBar;
 
     /**
-     * 其他
+     * 工具实例
      **/
     //主Activity实例
     private MainActivity mainActivity;
@@ -55,6 +54,11 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     private LyricActivityReceiver lyricActivityReceiver = new LyricActivityReceiver();
     //处理器
     private Handler HandlerLyric = new Handler();
+
+
+    /**
+     * 自定义元素
+     **/
     //歌词内容索引
     private int Index;
     //歌词加载标识
@@ -250,29 +254,21 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     public void AdjustIndex(int CurrentTime) {
         if (Index == 0) {                           //索引位于数组首位
             if (CurrentTime < CurrentMusicItem.getLyricList().get( Index + 1 ).getTime()) {
-                Log.e( "索引位于数组首位", "在本数组范围内" );
                 DrawLyric();
             } else {
                 Index++;
-                Log.e( "索引位于数组首位", "在本数组之后" );
                 AdjustIndex( CurrentTime );
             }
         } else if (Index == sizeOfList - 1) {       //索引位于数组末位
-            Log.e( "索引位于数组末位", "重复歌词" );
             DrawLyric();
         } else {                                    //索引位于数组中间
             if (CurrentTime < CurrentMusicItem.getLyricList().get( Index ).getTime() - 500) {
-                Log.e( "后退       ", "在本数组之前" );
                 Index--;
-                Log.e( "Index;", Index + "" );
                 AdjustIndex( CurrentTime );
             } else if (CurrentTime < CurrentMusicItem.getLyricList().get( Index + 1 ).getTime() - 500) {
-                Log.e( "索引位于数组中间", "重复歌词" );
                 DrawLyric();
             } else {
-                Log.e( "前进       ", "在本数组之后" );
                 Index++;
-                Log.e( "Index;", Index + "" );
                 AdjustIndex( CurrentTime );
             }
         }
@@ -349,7 +345,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
             String strState = intent.getStringExtra( TransportFlag.State );
             //Log.e( TransportFlag.State, strState );
             switch (strState) {
-                case TransportFlag.LoadMusic:                                           //接收加载音乐列表     测试完毕
+                case TransportFlag.LoadMusic:                                           //接收加载音乐列表    测试完毕
                     mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));
                     CurrentMusicItem = mMusicList.get( 0 );
                     break;
@@ -367,7 +363,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                     mtvCurrentProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
                     mbtnPlay.setText( "PAUSE" );
                     break;
-                case TransportFlag.NextItem:                                            //接收下一首
+                case TransportFlag.NextItem:                                            //接收下一首          测试完毕
                     isLyricPrepared = false;
                     break;
                 case TransportFlag.LyricTo:                                             //接收当前歌词位置    测试完毕

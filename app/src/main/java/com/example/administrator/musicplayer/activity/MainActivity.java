@@ -236,9 +236,9 @@ public class MainActivity extends AppCompatActivity implements
             case R.id.tvName:           //歌词页
                 if (mtvName.getText().toString().equals( "Music Name" )) return;
                 Intent intent_LyricActivity = new Intent( MainActivity.this, LyricActivity.class );
-               // Bundle bundle=new Bundle();
-               // bundle.putSerializable("mMusicList",mMusicList );
-               // intent_LyricActivity.putExtras( bundle );
+                // Bundle bundle=new Bundle();
+                // bundle.putSerializable("mMusicList",mMusicList );
+                // intent_LyricActivity.putExtras( bundle );
                 startActivity( intent_LyricActivity );
                 break;
             case R.id.btnMore:          //扩展
@@ -594,13 +594,23 @@ public class MainActivity extends AppCompatActivity implements
 //                        req.scene = SendMessageToWX.Req.WXSceneSession;
 //                        iwxapi.sendReq( req );
                         weChatShareUtil = WeChatShareUtil.getInstance( MainActivity.this );
-                        Log.e( "RESULT",weChatShareUtil.regResult );
+                        Log.e( "RESULT", weChatShareUtil.regResult );
                         boolean result;
-                        // result = weChatShareUtil.shareUrl(strUrl, "title", BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), "description", SendMessageToWX.Req.WXSceneSession);
-                        result = weChatShareUtil.shareText( "test-----", SendMessageToWX.Req.WXSceneSession );
+                        result = weChatShareUtil.shareText( "test-----shareText", SendMessageToWX.Req.WXSceneSession );
                         if (!result) {
                             Toast.makeText( MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT ).show();
                         }
+
+//                        result = weChatShareUtil.shareUrl( strUrl, "test-----shareUrl", null, "description", SendMessageToWX.Req.WXSceneSession );
+//                        if (!result) {
+//                            Toast.makeText( MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT ).show();
+//                        }
+//
+//                        Bitmap bitmap = BitmapFactory.decodeResource( MainActivity.this.getResources(), R.mipmap.logo );
+//                        result = weChatShareUtil.sharePic( bitmap, SendMessageToWX.Req.WXSceneSession );
+//                        if (!result) {
+//                            Toast.makeText( MainActivity.this, "test-----sharePic", Toast.LENGTH_SHORT ).show();
+//                        }
                     }
                 } ).start();
                 break;
@@ -799,7 +809,7 @@ public class MainActivity extends AppCompatActivity implements
                     mtvCurrentProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
                     mbtnPlay.setText( "PAUSE" );
                     break;
-                case TransportFlag.Prepare:                                     //接收当前条目        测试完毕
+                case TransportFlag.Prepare:                                         //接收当前条目        测试完毕
                     CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.Prepare );
                     isComponentLocked = false;
                     mtvName.setText( CurrentMusicItem.getMusicName() );
