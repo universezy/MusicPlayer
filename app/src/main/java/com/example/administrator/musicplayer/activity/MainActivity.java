@@ -848,13 +848,5 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
-
-    public class XmlCreate{
-        //定义一个root作为xml文档的根元素
-        Element root = new Element("resources");
-        //生成一个文档
-        Document Doc = new Document(root);
-        Element elements = new Element("string");
-
-    }
 }
+

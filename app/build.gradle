@@ -68,6 +68,6 @@ dependencies {
     compile 'junit:junit:4.12'
     provided files('libs/mta-sdk-1.6.2.jar')
     provided files('libs/open_sdk_r5781.jar')
+    provided files('libs/jdom-2.0.6.jar')
     compile 'com.google.android.gms:play-services-appindexing:8.4.0'
-    compile files('libs/jdom-2.0.6.jar')
 }

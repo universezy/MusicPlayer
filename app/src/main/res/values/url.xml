@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="share_url">测试链接:\n &lt;a href=\"https://y.qq.com/portal/search.html#page=1&amp;searchid=1&amp;remoteplace=txt.yqq.top&amp;t=song&amp;w=apologize\"&gt;点击跳转到QQ音乐&lt;/a&gt;\n</string>
+    <string name="share_url">测试链接:\n &lt;a href=\"https://y.qq.com/portal/search.html#page=1&amp;searchid=1&amp;remoteplace=txt.yqq.top&amp;t=song&amp;w=\"&gt;点击跳转到QQ音乐&lt;/a&gt;</string>
 </resources>
