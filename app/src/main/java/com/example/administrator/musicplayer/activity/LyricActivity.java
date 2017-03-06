@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
@@ -209,6 +210,9 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      **/
     public void LoadLyric() {
         isComponentLocked = true;
+        mtvName.setText( "Name : " + CurrentMusicItem.getMusicName() );
+        mtvArtist.setText( "Artist : " + CurrentMusicItem.getMusicArtist() );
+        mtvAlbum.setText( "Album : " + CurrentMusicItem.getMusicAlbum() );
         if (CurrentMusicItem.getLyricList() != null) {
             lyricView.setLyric( "Searching local lyric ......" );
             isLyricPrepared = false;
@@ -252,6 +256,8 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
      * 调整索引位置
      **/
     public void AdjustIndex(int CurrentTime) {
+        Log.e( "CurrentTime", CurrentTime + "" );
+        Log.e( "Index", Index + "" );
         if (Index == 0) {                           //索引位于数组首位
             if (CurrentTime < CurrentMusicItem.getLyricList().get( Index + 1 ).getTime()) {
                 DrawLyric();
@@ -260,7 +266,12 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 AdjustIndex( CurrentTime );
             }
         } else if (Index == sizeOfList - 1) {       //索引位于数组末位
-            DrawLyric();
+            if(CurrentTime < CurrentMusicItem.getLyricList().get( Index ).getTime() - 300){
+                Index--;
+                AdjustIndex( CurrentTime );
+            }else{
+                DrawLyric();
+            }
         } else {                                    //索引位于数组中间
             if (CurrentTime < CurrentMusicItem.getLyricList().get( Index ).getTime() - 300) {
                 Index--;

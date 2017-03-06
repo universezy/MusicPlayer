@@ -18,6 +18,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -129,12 +130,14 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstance) {
         super.onCreate( savedInstance );
         this.mainActivity = this;
+
         //显示欢迎界面
         setContentView( R.layout.activity_main );
         findViewById( R.id.switch_main ).setVisibility( View.GONE );
         //设置抽屉视图关闭手势滑动
         drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
         InitLayout();
+
         //延迟显示主界面
         HandlerMain.postDelayed( new Runnable() {
             @Override
@@ -143,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements
                 findViewById( R.id.switch_main ).setVisibility( View.VISIBLE );
             }
         }, 3000 );
+
         //启动Service
         HandlerMain.postDelayed( new Runnable() {
             @Override
@@ -694,13 +698,14 @@ public class MainActivity extends AppCompatActivity implements
      * 设置铃声
      **/
     public void SetRingtone() {
+        final MusicBean ringtoneMusic = CurrentMusicItem;
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
         } else {
             new Thread( new Runnable() {
                 @Override
                 public void run() {
-                    File file = new File( CurrentMusicItem.getMusicPath() );
+                    File file = new File( ringtoneMusic.getMusicPath() );
                     if (!file.exists()) {
                         Toast.makeText( MainActivity.this, "File doesn't exist.", Toast.LENGTH_SHORT ).show();
                         return;
@@ -722,6 +727,7 @@ public class MainActivity extends AppCompatActivity implements
                         newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
                     }
                     final Uri NewUri = newUri;
+                    Looper.prepare();
                     new AlertDialog.Builder( MainActivity.this )
                             .setTitle( "Are you sure to set the music as ringtone ?" )
                             .setMessage( RingtoneManager.getRingtone( MainActivity.this, NewUri ).getTitle( MainActivity.this ) )
@@ -729,7 +735,11 @@ public class MainActivity extends AppCompatActivity implements
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     RingtoneManager.setActualDefaultRingtoneUri( MainActivity.this, 1, NewUri );
-                                    Log.e( "ringtone:", RingtoneManager.getRingtone( MainActivity.this, NewUri ).getTitle( MainActivity.this ) );
+                                    if (RingtoneManager.getRingtone( MainActivity.this, NewUri ).getTitle( MainActivity.this ).replace( ".mp3", "" ).equals( ringtoneMusic.getMusicName() )) {
+                                        Toast.makeText( MainActivity.this, "Set ringtone successful!", Toast.LENGTH_SHORT ).show();
+                                    } else {
+                                        Toast.makeText( MainActivity.this, "Set ringtone failed.", Toast.LENGTH_SHORT ).show();
+                                    }
                                     dialog.dismiss();
                                 }
                             } )
@@ -739,6 +749,7 @@ public class MainActivity extends AppCompatActivity implements
                                     dialog.dismiss();
                                 }
                             } ).show();
+                    Looper.loop();
                 }
             } ).start();
         }

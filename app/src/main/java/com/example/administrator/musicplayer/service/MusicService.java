@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import com.example.administrator.musicplayer.activity.MainActivity;
 import com.example.administrator.musicplayer.datastructure.LyricItem;
@@ -52,7 +51,6 @@ public class MusicService extends Service {
     private Runnable RunnableSeekbar;
     //歌词线程
     private Runnable RunnableLyric;
-
     //接收器
     protected MusicServiceReceiver musicServiceReceiver = new MusicServiceReceiver();
 
@@ -83,6 +81,8 @@ public class MusicService extends Service {
     boolean Status_MusicItem = STATUS_FAILURE;
     //扫描歌词线程结果标识
     boolean Status_Lyric = STATUS_SUCCESSFUL;
+    //播放线程标识
+    boolean play = false;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -104,6 +104,7 @@ public class MusicService extends Service {
         RunnablePlay = new Runnable() {
             @Override
             public void run() {
+                play = true;
                 mediaplayer.start();
                 HandlerService.post( RunnableSeekbar );
                 HandlerService.post( RunnableLyric );
@@ -114,16 +115,18 @@ public class MusicService extends Service {
         RunnableSeekbar = new Runnable() {
             @Override
             public void run() {
-                try {
-                    Intent Intent_UpdateSeekBar = new Intent( TransportFlag.MusicService );
-                    Intent_UpdateSeekBar.putExtra( "SeekBarTo", mediaplayer.getCurrentPosition() );
-                    Intent_UpdateSeekBar.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
-                    Intent_UpdateSeekBar.putExtra( TransportFlag.State, TransportFlag.SeekTo );
-                    //更新拖动条信息给MainActivity      测试完毕
-                    sendBroadcast( Intent_UpdateSeekBar );
-                    HandlerService.postDelayed( RunnableSeekbar, 1000 );
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
+                if (play) {
+                    try {
+                        Intent Intent_UpdateSeekBar = new Intent( TransportFlag.MusicService );
+                        Intent_UpdateSeekBar.putExtra( "SeekBarTo", mediaplayer.getCurrentPosition() );
+                        Intent_UpdateSeekBar.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
+                        Intent_UpdateSeekBar.putExtra( TransportFlag.State, TransportFlag.SeekTo );
+                        //更新拖动条信息给MainActivity      测试完毕
+                        sendBroadcast( Intent_UpdateSeekBar );
+                        HandlerService.postDelayed( RunnableSeekbar, 1000 );
+                    } catch (IllegalStateException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         };
@@ -132,12 +135,14 @@ public class MusicService extends Service {
         RunnableLyric = new Runnable() {
             @Override
             public void run() {
-                Intent Intent_UpdateLyric = new Intent( TransportFlag.MusicService );
-                Intent_UpdateLyric.putExtra( "CurrentPosition", mediaplayer.getCurrentPosition() );
-                Intent_UpdateLyric.putExtra( TransportFlag.State, TransportFlag.LyricTo );
-                //更新歌词给LyricActivity
-                sendBroadcast( Intent_UpdateLyric );
-                HandlerService.postDelayed( RunnableLyric, 300 );
+                if (play) {
+                    Intent Intent_UpdateLyric = new Intent( TransportFlag.MusicService );
+                    Intent_UpdateLyric.putExtra( "CurrentPosition", mediaplayer.getCurrentPosition() );
+                    Intent_UpdateLyric.putExtra( TransportFlag.State, TransportFlag.LyricTo );
+                    //更新歌词给LyricActivity
+                    sendBroadcast( Intent_UpdateLyric );
+                    HandlerService.postDelayed( RunnableLyric, 300 );
+                }
             }
         };
     }
@@ -230,6 +235,7 @@ public class MusicService extends Service {
                             string = getMusicAttribution( cursor, MediaStore.Audio.Media.ALBUM );
                             music.setMusicAlbum( (string != null) ? string : "null" );
                             mMusicList.add( music );
+
                         }
                     }
                     cursor.close();
@@ -357,7 +363,8 @@ public class MusicService extends Service {
                 public void run() {
                     for (MusicBean musicBean : mMusicList) {
                         for (File file : LyricList) {
-                            if (musicBean.getMusicName().replace( " ", "" ).equals( file.getName().replace( " ", "" ).replace( ".lrc", "" ) )) {
+                            if (musicBean.getMusicName().replace( " ", "" ).contains( file.getName().replace( " ", "" ).replace( ".lrc", "" ) )
+                                    || file.getName().replace( " ", "" ).replace( ".lrc", "" ).contains( musicBean.getMusicName().replace( " ", "" ) )) {
                                 musicBean.setLyricPath( file.getAbsolutePath() );
                                 Parsing( musicBean );
                                 break;
@@ -389,6 +396,7 @@ public class MusicService extends Service {
         PlayArrayIndex = (PlayArrayIndex + mMusicList.size()) % mMusicList.size();
         ItemLocationIndex = PlayArray[PlayArrayIndex];
         mediaplayer.stop();
+        play = true;
         playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
     }
 
@@ -400,6 +408,7 @@ public class MusicService extends Service {
         PlayArrayIndex = PlayArrayIndex % mMusicList.size();
         ItemLocationIndex = PlayArray[PlayArrayIndex];
         mediaplayer.stop();
+        play = true;
         playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
     }
 
@@ -434,6 +443,7 @@ public class MusicService extends Service {
                 mediaplayer.setOnCompletionListener( new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
+                        play = false;
                         PlayArrayIndex++;
                         PlayArrayIndex = PlayArrayIndex % mMusicList.size();
                         ItemLocationIndex = PlayArray[PlayArrayIndex];
@@ -539,10 +549,12 @@ public class MusicService extends Service {
                     playMusic( path );
                     break;
                 case TransportFlag.Play:                                        //接收媒体播放器播放     测试完毕
+                    play = true;
                     mediaplayer.start();
                     break;
                 case TransportFlag.Pause:                                       //接收媒体播放器暂停     测试完毕
                     mediaplayer.pause();
+                    play = false;
                     break;
                 case TransportFlag.Last:                                        //接收上一首             测试完毕
                     LastMusic();
