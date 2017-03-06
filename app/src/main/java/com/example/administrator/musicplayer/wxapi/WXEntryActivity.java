@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import com.example.administrator.musicplayer.tool.WeChatShareUtil;
+import com.example.administrator.musicplayer.R;
 import com.tencent.mm.opensdk.modelbase.BaseReq;
 import com.tencent.mm.opensdk.modelbase.BaseResp;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
@@ -16,7 +16,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        IWXAPI api = WXAPIFactory.createWXAPI(this, WeChatShareUtil.APP_ID, false);
+        IWXAPI api = WXAPIFactory.createWXAPI(this, String.valueOf( R.string.APP_ID_WX ), false);
         api.handleIntent(getIntent(),this);
         finish();
     }

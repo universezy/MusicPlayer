@@ -4,8 +4,6 @@
       <root url="jar://$PROJECT_DIR$/app/libs/wechat-sdk-android-with-mta-1.0.2.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.tencent.mm.opensdk/wechat-sdk-android-with-mta/1.0.2/95a97c613463053c75eb3d361fc10ef3a7102f62/wechat-sdk-android-with-mta-1.0.2-sources.jar!/" />
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>

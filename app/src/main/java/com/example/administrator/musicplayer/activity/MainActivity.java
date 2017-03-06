@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
@@ -44,11 +45,13 @@ import com.example.administrator.musicplayer.service.MusicService;
 import com.example.administrator.musicplayer.tool.ListAdapter;
 import com.example.administrator.musicplayer.tool.ShareListener;
 import com.example.administrator.musicplayer.tool.TransportFlag;
-import com.example.administrator.musicplayer.tool.WeChatShareUtil;
+import com.example.administrator.musicplayer.wxapi.WXEntryActivity;
 import com.tencent.connect.share.QQShare;
-import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
 import com.tencent.tauth.Tencent;
+
+import org.jdom2.Element;
+import org.jdom2.Document;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -98,8 +101,8 @@ public class MainActivity extends AppCompatActivity implements
     protected Tencent tencent;
     //微信API
     protected IWXAPI iwxapi;
-    //微信分享工具类
-    public WeChatShareUtil weChatShareUtil;
+    //微信接收结果类
+    private WXEntryActivity wxEntryActivity = new WXEntryActivity();
     //接收器
     protected MainActivityReceiver mainActivityReceiver = new MainActivityReceiver();
 
@@ -564,10 +567,12 @@ public class MainActivity extends AppCompatActivity implements
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
             return;
         }
-        final String strUrl = "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" + mtvName.getText().toString()
-                .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" ).replaceAll( ".mp3", "" ).replaceAll( " ", "%20" );
+        final String shareName = CurrentMusicItem.getMusicName();
         switch (ShareBy) {
             case ShareByQQ:
+                final String strUrl = "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" +
+                        shareName.replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
+                                 .replaceAll( ".mp3", "" ).replace( "-", "" ).replace( " ", "%20" );
                 new Thread( new Runnable() {
                     @Override
                     public void run() {
@@ -575,7 +580,7 @@ public class MainActivity extends AppCompatActivity implements
                         final Bundle params = new Bundle();
                         params.putInt( QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT );
                         params.putString( QQShare.SHARE_TO_QQ_TITLE, "Share music to friend" );
-                        params.putString( QQShare.SHARE_TO_QQ_SUMMARY, mtvName.getText().toString() );
+                        params.putString( QQShare.SHARE_TO_QQ_SUMMARY, shareName );
                         params.putString( QQShare.SHARE_TO_QQ_TARGET_URL, strUrl );
                         params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
                         params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
@@ -587,10 +592,12 @@ public class MainActivity extends AppCompatActivity implements
                 new Thread( new Runnable() {
                     @Override
                     public void run() {
+                        //审核分享
 //                        iwxapi = WXAPIFactory.createWXAPI( MainActivity.this, String.valueOf( R.string.APP_ID_WX ), true );
+//                        iwxapi.handleIntent( getIntent(), wxEntryActivity );
 //                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
 //                        if (!iwxapi.isWXAppInstalled()) {
-//                            Toast.makeText( MainActivity.this, "You haven't install Wechat",
+//                            Toast.makeText( MainActivity.this, "You haven't installed Wechat",
 //                                    Toast.LENGTH_SHORT ).show();
 //                            return;
 //                        }
@@ -604,24 +611,29 @@ public class MainActivity extends AppCompatActivity implements
 //                        req.message = msg;
 //                        req.scene = SendMessageToWX.Req.WXSceneSession;
 //                        iwxapi.sendReq( req );
-                        weChatShareUtil = WeChatShareUtil.getInstance( MainActivity.this );
-                        Log.e( "RESULT", weChatShareUtil.regResult );
-                        boolean result;
-                        result = weChatShareUtil.shareText( "test-----shareText", SendMessageToWX.Req.WXSceneSession );
-                        if (!result) {
-                            Toast.makeText( MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT ).show();
-                        }
 
-//                        result = weChatShareUtil.shareUrl( strUrl, "test-----shareUrl", null, "description", SendMessageToWX.Req.WXSceneSession );
-//                        if (!result) {
-//                            Toast.makeText( MainActivity.this, "没有检测到微信", Toast.LENGTH_SHORT ).show();
-//                        }
-//
-//                        Bitmap bitmap = BitmapFactory.decodeResource( MainActivity.this.getResources(), R.mipmap.logo );
-//                        result = weChatShareUtil.sharePic( bitmap, SendMessageToWX.Req.WXSceneSession );
-//                        if (!result) {
-//                            Toast.makeText( MainActivity.this, "test-----sharePic", Toast.LENGTH_SHORT ).show();
-//                        }
+
+
+                        //绕过审核分享
+                        List<PackageInfo> infoList = getPackageManager().getInstalledPackages( 0 );
+                        boolean isTargetExit = false;
+                        if (!infoList.isEmpty()) {
+                            for (PackageInfo packageInfo : infoList) {
+                                if (packageInfo.packageName.equalsIgnoreCase( "com.tencent.mm" )) {
+                                    isTargetExit = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (isTargetExit) {
+                            Intent Intent_target = new Intent( Intent.ACTION_SEND );
+                            Intent_target.setType( "text/plain" );
+                            Intent_target.putExtra( Intent.EXTRA_TEXT, getString( R.string.share_url ) );
+                            Intent_target.setComponent( new ComponentName( "com.tencent.mm", "com.tencent.mm.ui.tools.ShareImgUI" ) );
+                            startActivity( Intent_target );
+                        } else {
+                            Toast.makeText( MainActivity.this, "Please install Wechat.", Toast.LENGTH_SHORT ).show();
+                        }
                     }
                 } ).start();
                 break;
@@ -835,5 +847,14 @@ public class MainActivity extends AppCompatActivity implements
                     break;
             }
         }
+    }
+
+    public class XmlCreate{
+        //定义一个root作为xml文档的根元素
+        Element root = new Element("resources");
+        //生成一个文档
+        Document Doc = new Document(root);
+        Element elements = new Element("string");
+
     }
 }
