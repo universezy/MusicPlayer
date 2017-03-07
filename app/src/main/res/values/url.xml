@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="share_url">测试链接:\n &lt;a href=\"https://y.qq.com/portal/search.html#page=1&amp;searchid=1&amp;remoteplace=txt.yqq.top&amp;t=song&amp;w=\"&gt;点击跳转到QQ音乐&lt;/a&gt;</string>
+    <string name="share_url">
+    \n\n &lt;a href=\"https://y.qq.com/\"&gt;QQ音乐&lt;/a&gt;
+    \n\n &lt;a href=\"http://music.baidu.com/listcate/\"&gt;百度音乐&lt;/a&gt;
+    \n\n &lt;a href=\"http://music.163.com/\"&gt;网易云音乐&lt;/a&gt;\n
+    </string>
 </resources>

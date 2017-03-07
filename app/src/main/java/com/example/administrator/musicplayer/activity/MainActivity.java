@@ -50,14 +50,13 @@ import com.tencent.connect.share.QQShare;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
 import com.tencent.tauth.Tencent;
 
-import org.jdom2.Element;
-import org.jdom2.Document;
-
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static com.example.administrator.musicplayer.R.id.sb;
 
 public class MainActivity extends AppCompatActivity implements
         View.OnClickListener,
@@ -567,12 +566,12 @@ public class MainActivity extends AppCompatActivity implements
             Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
             return;
         }
-        final String shareName = CurrentMusicItem.getMusicName();
+        final MusicBean shareItem = CurrentMusicItem;
         switch (ShareBy) {
             case ShareByQQ:
-                final String strUrl = "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" +
-                        shareName.replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
-                                 .replaceAll( ".mp3", "" ).replace( "-", "" ).replace( " ", "%20" );
+                final String strUrl1 = "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" +
+                        shareItem.getMusicName().replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
+                                .replaceAll( ".mp3", "" ).replace( "-", "" ).replace( " ", "%20" );
                 new Thread( new Runnable() {
                     @Override
                     public void run() {
@@ -580,8 +579,8 @@ public class MainActivity extends AppCompatActivity implements
                         final Bundle params = new Bundle();
                         params.putInt( QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT );
                         params.putString( QQShare.SHARE_TO_QQ_TITLE, "Share music to friend" );
-                        params.putString( QQShare.SHARE_TO_QQ_SUMMARY, shareName );
-                        params.putString( QQShare.SHARE_TO_QQ_TARGET_URL, strUrl );
+                        params.putString( QQShare.SHARE_TO_QQ_SUMMARY, shareItem.getMusicName() );
+                        params.putString( QQShare.SHARE_TO_QQ_TARGET_URL, strUrl1 );
                         params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
                         params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
                         tencent.shareToQQ( MainActivity.this, params, new ShareListener() );
@@ -589,6 +588,7 @@ public class MainActivity extends AppCompatActivity implements
                 } ).start();
                 break;
             case ShareByWechat:
+                final String strUrl2 = "音乐分享 ：\n\t" + shareItem.getMusicName() + getResources().getString( R.string.share_url ) + "\n- 来自 MusicPlayerOfZengYu";
                 new Thread( new Runnable() {
                     @Override
                     public void run() {
@@ -612,8 +612,6 @@ public class MainActivity extends AppCompatActivity implements
 //                        req.scene = SendMessageToWX.Req.WXSceneSession;
 //                        iwxapi.sendReq( req );
 
-
-
                         //绕过审核分享
                         List<PackageInfo> infoList = getPackageManager().getInstalledPackages( 0 );
                         boolean isTargetExit = false;
@@ -628,7 +626,7 @@ public class MainActivity extends AppCompatActivity implements
                         if (isTargetExit) {
                             Intent Intent_target = new Intent( Intent.ACTION_SEND );
                             Intent_target.setType( "text/plain" );
-                            Intent_target.putExtra( Intent.EXTRA_TEXT, getString( R.string.share_url ) );
+                            Intent_target.putExtra( Intent.EXTRA_TEXT, strUrl2 );
                             Intent_target.setComponent( new ComponentName( "com.tencent.mm", "com.tencent.mm.ui.tools.ShareImgUI" ) );
                             startActivity( Intent_target );
                         } else {
@@ -641,6 +639,7 @@ public class MainActivity extends AppCompatActivity implements
                 break;
         }
     }
+
 
     /**
      * 发送音乐
