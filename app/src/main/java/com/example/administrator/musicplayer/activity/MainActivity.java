@@ -56,8 +56,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.example.administrator.musicplayer.R.id.sb;
-
 public class MainActivity extends AppCompatActivity implements
         View.OnClickListener,
         NavigationView.OnNavigationItemSelectedListener,
@@ -146,21 +144,25 @@ public class MainActivity extends AppCompatActivity implements
             public void run() {
                 findViewById( R.id.switch_welcome ).setVisibility( View.GONE );
                 findViewById( R.id.switch_main ).setVisibility( View.VISIBLE );
-            }
-        }, 3000 );
 
-        //启动Service
-        HandlerMain.postDelayed( new Runnable() {
-            @Override
-            public void run() {
-                //注册接收器
-                IntentFilter intentFilter = new IntentFilter( TransportFlag.MusicService );
-                registerReceiver( mainActivityReceiver, intentFilter );
-                //绑定服务
-                Intent intent = new Intent( MainActivity.this, MusicService.class );
-                bindService( intent, serviceConnection, Context.BIND_AUTO_CREATE );
+                Toast.makeText( MainActivity.this, "Loading music resource, please wait ...", Toast.LENGTH_SHORT ).show();
+
+                //启动Service
+                HandlerMain.postDelayed( new Runnable() {
+                    @Override
+                    public void run() {
+                        //注册接收器
+                        IntentFilter intentFilter = new IntentFilter( TransportFlag.MusicService );
+                        registerReceiver( mainActivityReceiver, intentFilter );
+                        //绑定服务
+                        Intent intent = new Intent( MainActivity.this, MusicService.class );
+                        bindService( intent, serviceConnection, Context.BIND_AUTO_CREATE );
+                    }
+                }, 500 );
             }
-        }, 200 );
+        }, 2000 );
+
+
     }
 
     @Override
@@ -235,6 +237,8 @@ public class MainActivity extends AppCompatActivity implements
 
         //开启手势滑动
         drawerLayout.setDrawerLockMode( DrawerLayout.LOCK_MODE_UNLOCKED );
+
+
     }
 
     /*****************************************************************************************
