@@ -128,39 +128,39 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onCreate(Bundle savedInstance) {
-        super.onCreate( savedInstance );
+        super.onCreate(savedInstance);
         this.mainActivity = this;
 
         //显示欢迎界面
-        setContentView( R.layout.activity_main );
-        findViewById( R.id.switch_main ).setVisibility( View.GONE );
+        setContentView(R.layout.activity_main);
+        findViewById(R.id.switch_main).setVisibility(View.GONE);
         //设置抽屉视图关闭手势滑动
-        drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         InitLayout();
 
         //延迟显示主界面
-        HandlerMain.postDelayed( new Runnable() {
+        HandlerMain.postDelayed(new Runnable() {
             @Override
             public void run() {
-                findViewById( R.id.switch_welcome ).setVisibility( View.GONE );
-                findViewById( R.id.switch_main ).setVisibility( View.VISIBLE );
+                findViewById(R.id.switch_welcome).setVisibility(View.GONE);
+                findViewById(R.id.switch_main).setVisibility(View.VISIBLE);
 
-                Toast.makeText( MainActivity.this, "Loading music resource, please wait ...", Toast.LENGTH_SHORT ).show();
+                Toast.makeText(MainActivity.this, "Loading music resource, please wait ...", Toast.LENGTH_SHORT).show();
 
                 //启动Service
-                HandlerMain.postDelayed( new Runnable() {
+                HandlerMain.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         //注册接收器
-                        IntentFilter intentFilter = new IntentFilter( TransportFlag.MusicService );
-                        registerReceiver( mainActivityReceiver, intentFilter );
+                        IntentFilter intentFilter = new IntentFilter(TransportFlag.MusicService);
+                        registerReceiver(mainActivityReceiver, intentFilter);
                         //绑定服务
-                        Intent intent = new Intent( MainActivity.this, MusicService.class );
-                        bindService( intent, serviceConnection, Context.BIND_AUTO_CREATE );
+                        Intent intent = new Intent(MainActivity.this, MusicService.class);
+                        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
                     }
-                }, 500 );
+                }, 500);
             }
-        }, 2000 );
+        }, 2000);
 
 
     }
@@ -168,13 +168,13 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (tencent != null)
-            Tencent.onActivityResultData( requestCode, resultCode, data, new ShareListener() );
+            Tencent.onActivityResultData(requestCode, resultCode, data, new ShareListener());
     }
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver( mainActivityReceiver );
-        unbindService( serviceConnection );
+        unregisterReceiver(mainActivityReceiver);
+        unbindService(serviceConnection);
         super.onDestroy();
     }
 
@@ -194,51 +194,49 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void InitLayout() {
         //设置列表适配器
-        listAdapter = new ListAdapter( getApplicationContext(), R.layout.item_music_list_layout );
-        listAdapter.setList( mMusicList );
+        listAdapter = new ListAdapter(getApplicationContext(), R.layout.item_music_list_layout);
+        listAdapter.setList(mMusicList);
 
         //设置列表视图
-        listView = (ListView) findViewById( R.id.lvList );
-        listView.setAdapter( listAdapter );
-        listView.setTextFilterEnabled( true );
-        listView.setOnItemClickListener( this );
+        listView = (ListView) findViewById(R.id.lvList);
+        listView.setAdapter(listAdapter);
+        listView.setTextFilterEnabled(true);
+        listView.setOnItemClickListener(this);
 
         //设置搜索视图
-        searchView = (SearchView) findViewById( R.id.svSearch );
-        searchView.setOnQueryTextListener( this );
-        searchView.setSubmitButtonEnabled( true );
-        searchView.setFocusable( false );
+        searchView = (SearchView) findViewById(R.id.svSearch);
+        searchView.setOnQueryTextListener(this);
+        searchView.setSubmitButtonEnabled(true);
+        searchView.setFocusable(false);
 
         //设置拖动条
-        seekBar = (SeekBar) findViewById( R.id.sb );
-        seekBar.setOnSeekBarChangeListener( this );
+        seekBar = (SeekBar) findViewById(R.id.sb);
+        seekBar.setOnSeekBarChangeListener(this);
 
         //设置文本视图
-        mtvName = (TextView) findViewById( R.id.tvName );
-        mtvName.setOnClickListener( this );
-        mtvCurrentProgress = (TextView) findViewById( R.id.tvCurrentProgress );
-        mtvTotalProgress = (TextView) findViewById( R.id.tvTotalProgress );
+        mtvName = (TextView) findViewById(R.id.tvName);
+        mtvName.setOnClickListener(this);
+        mtvCurrentProgress = (TextView) findViewById(R.id.tvCurrentProgress);
+        mtvTotalProgress = (TextView) findViewById(R.id.tvTotalProgress);
 
         //设置按钮
-        mbtnMore = (Button) findViewById( R.id.btnMore );
-        mbtnMore.setOnClickListener( this );
-        mbtnMode = (Button) findViewById( R.id.btnMode );
-        mbtnMode.setOnClickListener( this );
-        mbtnLast = (Button) findViewById( R.id.btnLast );
-        mbtnLast.setOnClickListener( this );
-        mbtnNext = (Button) findViewById( R.id.btnNext );
-        mbtnNext.setOnClickListener( this );
-        mbtnPlay = (Button) findViewById( R.id.btnPlay );
-        mbtnPlay.setOnClickListener( this );
+        mbtnMore = (Button) findViewById(R.id.btnMore);
+        mbtnMore.setOnClickListener(this);
+        mbtnMode = (Button) findViewById(R.id.btnMode);
+        mbtnMode.setOnClickListener(this);
+        mbtnLast = (Button) findViewById(R.id.btnLast);
+        mbtnLast.setOnClickListener(this);
+        mbtnNext = (Button) findViewById(R.id.btnNext);
+        mbtnNext.setOnClickListener(this);
+        mbtnPlay = (Button) findViewById(R.id.btnPlay);
+        mbtnPlay.setOnClickListener(this);
 
         //设置导航视图
-        navigationView = (NavigationView) findViewById( R.id.nav_view );
-        navigationView.setNavigationItemSelectedListener( this );
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
 
         //开启手势滑动
-        drawerLayout.setDrawerLockMode( DrawerLayout.LOCK_MODE_UNLOCKED );
-
-
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 
     /*****************************************************************************************
@@ -254,13 +252,13 @@ public class MainActivity extends AppCompatActivity implements
         if (isComponentLocked) return;
         switch (v.getId()) {
             case R.id.tvName:           //歌词页
-                if (mtvName.getText().toString().equals( "Music Name" )) return;
-                Intent intent_LyricActivity = new Intent( MainActivity.this, LyricActivity.class );
-                startActivity( intent_LyricActivity );
+                if (mtvName.getText().toString().equals("Music Name")) return;
+                Intent intent_LyricActivity = new Intent(MainActivity.this, LyricActivity.class);
+                startActivity(intent_LyricActivity);
                 break;
             case R.id.btnMore:          //扩展
-                if (!drawerLayout.isDrawerOpen( GravityCompat.START )) {
-                    drawerLayout.openDrawer( GravityCompat.START );
+                if (!drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.openDrawer(GravityCompat.START);
                 }
                 break;
             case R.id.btnMode:          //模式
@@ -285,9 +283,9 @@ public class MainActivity extends AppCompatActivity implements
      **/
     @Override
     public void onBackPressed() {
-        drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
-        if (drawerLayout.isDrawerOpen( GravityCompat.START )) {
-            drawerLayout.closeDrawer( GravityCompat.START );
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
         }
@@ -300,16 +298,16 @@ public class MainActivity extends AppCompatActivity implements
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.nav_shareByQQ) {                 //通过QQ分享            已实现
-            ShareMusicTo( ShareByQQ );
+            ShareMusicTo(ShareByQQ);
         } else if (id == R.id.nav_shareByWechat) {      //通过微信分享
-            ShareMusicTo( ShareByWechat );
+            ShareMusicTo(ShareByWechat);
             //MessageToUser();
         } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送            已实现
-            SendMusicTo( SendByQQ );
+            SendMusicTo(SendByQQ);
         } else if (id == R.id.nav_sendByWechat) {       //通过微信发送          已实现
-            SendMusicTo( SendByWechat );
+            SendMusicTo(SendByWechat);
         } else if (id == R.id.nav_sendByBluetooth) {    //通过蓝牙发送          已实现
-            SendMusicTo( SendByBluetooth );
+            SendMusicTo(SendByBluetooth);
         } else if (id == R.id.nav_setToRingtone) {      //设为铃声              已实现
             SetRingtone();
         } else if (id == R.id.nav_version) {            //版本号                已实现
@@ -317,8 +315,8 @@ public class MainActivity extends AppCompatActivity implements
         } else if (id == R.id.nav_exit) {               //退出应用              已实现
             Exit();
         } else {
-            drawerLayout = (DrawerLayout) findViewById( R.id.drawer_layout );
-            drawerLayout.closeDrawer( GravityCompat.START );
+            drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+            drawerLayout.closeDrawer(GravityCompat.START);
         }
         return true;
     }
@@ -329,14 +327,14 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         searchView.clearFocus();
-        if ((listAdapter.getItem( position )) != null) {
-            Intent Intent_onItemClick = new Intent( TransportFlag.MainActivity );
-            Intent_onItemClick.putExtra( "position", position );
-            Intent_onItemClick.putExtra( "path", ((MusicBean) listAdapter.getItem( position )).getMusicPath() );
-            Intent_onItemClick.putExtra( TransportFlag.State, TransportFlag.PlayList );
+        if ((listAdapter.getItem(position)) != null) {
+            Intent Intent_onItemClick = new Intent(TransportFlag.MainActivity);
+            Intent_onItemClick.putExtra("position", position);
+            Intent_onItemClick.putExtra("path", ((MusicBean) listAdapter.getItem(position)).getMusicPath());
+            Intent_onItemClick.putExtra(TransportFlag.State, TransportFlag.PlayList);
             //Service播放选择条目     测试完毕
-            sendBroadcast( Intent_onItemClick );
-            mbtnPlay.setText( "PAUSE" );
+            sendBroadcast(Intent_onItemClick);
+            mbtnPlay.setText("PAUSE");
         }
     }
 
@@ -345,16 +343,16 @@ public class MainActivity extends AppCompatActivity implements
      **/
     @Override
     public boolean onQueryTextSubmit(String query) {
-        if (!(TextUtils.isEmpty( query ))) {
-            UpdateList( 0, query );
+        if (!(TextUtils.isEmpty(query))) {
+            UpdateList(0, query);
         }
         return false;
     }
 
     @Override
     public boolean onQueryTextChange(String newText) {
-        if (TextUtils.isEmpty( newText )) {
-            UpdateList( 1, newText );
+        if (TextUtils.isEmpty(newText)) {
+            UpdateList(1, newText);
         }
         return true;
     }
@@ -373,7 +371,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {  //停止拖动
-        UpdateSeekbar( seekBar );
+        UpdateSeekbar(seekBar);
     }
 
     /*****************************************************************************************
@@ -384,25 +382,25 @@ public class MainActivity extends AppCompatActivity implements
      * 载入歌曲
      **/
     public void LoadMusic() {
-        HandlerMain.post( new Runnable() {
+        CurrentMusicItem = mMusicList.get( 0 );
+        HandlerMain.post(new Runnable() {
             @Override
             public void run() {
-                listAdapter.setList( mMusicList );
-                listView.setAdapter( listAdapter );
-                CurrentMusicItem = mMusicList.get( 0 );
+                listAdapter.setList(mMusicList);
+                isComponentLocked = false;
             }
-        } );
+        });
     }
 
     /**
      * 发送列表给Service
      **/
     public void sendMusicList(ArrayList<MusicBean> MusicList) {
-        Intent Intent_SendMusicList = new Intent( TransportFlag.MainActivity );
-        Intent_SendMusicList.putExtra( "mMusicList", MusicList );
-        Intent_SendMusicList.putExtra( TransportFlag.State, TransportFlag.LoadMusic );
+        Intent Intent_SendMusicList = new Intent(TransportFlag.MainActivity);
+        Intent_SendMusicList.putExtra("mMusicList", MusicList);
+        Intent_SendMusicList.putExtra(TransportFlag.State, TransportFlag.LoadMusic);
         //将播放列表发给Service        测试完毕
-        sendBroadcast( Intent_SendMusicList );
+        sendBroadcast(Intent_SendMusicList);
     }
 
     /**
@@ -410,12 +408,12 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public ArrayList<MusicBean> Search(String strSearch) {
         if (mMusicList == null) {
-            Log.e( "mMusicList", "null" );
+            Log.e("mMusicList", "null");
         } else {
             mSearchList.clear();
             for (int i = 0; i < mMusicList.size(); i++) {
-                if (mMusicList.get( i ).getMusicName().contains( strSearch )) {
-                    mSearchList.add( mMusicList.get( i ) );
+                if (mMusicList.get(i).getMusicName().contains(strSearch)) {
+                    mSearchList.add(mMusicList.get(i));
                 }
             }
         }
@@ -428,21 +426,21 @@ public class MainActivity extends AppCompatActivity implements
     public void UpdateList(int UpdateType, String query) {
         switch (UpdateType) {
             case 0:
-                listAdapter.setList( Search( query ) );
-                sendMusicList( mSearchList );
+                listAdapter.setList(Search(query));
+                sendMusicList(mSearchList);
                 break;
             case 1:
                 if (mMusicList == null) {
-                    Log.e( "mMusicList", "null" );
+                    Log.e("mMusicList", "null");
                 } else {
-                    listAdapter.setList( mMusicList );
-                    sendMusicList( mMusicList );
+                    listAdapter.setList(mMusicList);
+                    sendMusicList(mMusicList);
                 }
                 break;
             default:
                 break;
         }
-        listView.setAdapter( listAdapter );
+        listView.setAdapter(listAdapter);
         searchView.clearFocus();
     }
 
@@ -451,33 +449,33 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void setPlayMode() {
         if (mMusicList == null || mMusicList.size() == 0) {
-            Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+            Toast.makeText(this, "Music list is empty.", Toast.LENGTH_SHORT).show();
             return;
         }
         /** 消息框形式弹出选项：顺序播放，单曲循环，随机播放。默认：顺序播放 **/
-        new AlertDialog.Builder( MainActivity.this )
-                .setTitle( "Set PlayMode" )
-                .setIcon( android.R.drawable.ic_dialog_info )
-                .setSingleChoiceItems( getResources().getStringArray( R.array.play_mode ), PlayMode,
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Set PlayMode")
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setSingleChoiceItems(getResources().getStringArray(R.array.play_mode), PlayMode,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 mode = which;
                             }
                         }
                 )
-                .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mbtnMode.setText( getResources().getStringArray( R.array.play_mode )[mode] );
+                        mbtnMode.setText(getResources().getStringArray(R.array.play_mode)[mode]);
                         PlayMode = mode;
-                        Intent Intent_PlayMode = new Intent( TransportFlag.MainActivity );
-                        Intent_PlayMode.putExtra( TransportFlag.Mode, PlayMode );
-                        Intent_PlayMode.putExtra( TransportFlag.State, TransportFlag.Mode );
+                        Intent Intent_PlayMode = new Intent(TransportFlag.MainActivity);
+                        Intent_PlayMode.putExtra(TransportFlag.Mode, PlayMode);
+                        Intent_PlayMode.putExtra(TransportFlag.State, TransportFlag.Mode);
                         //将播放模式传给Service        测试完毕
-                        sendBroadcast( Intent_PlayMode );
+                        sendBroadcast(Intent_PlayMode);
                         dialog.dismiss();
                     }
-                } )
+                })
                 .show();
     }
 
@@ -486,12 +484,12 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void LastItem() {
         if (mMusicList == null || mMusicList.size() == 0) {
-            Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+            Toast.makeText(this, "Music list is empty.", Toast.LENGTH_SHORT).show();
             return;
         }
-        Intent Intent_Last = new Intent( TransportFlag.MainActivity );
-        Intent_Last.putExtra( TransportFlag.State, TransportFlag.Last );
-        sendBroadcast( Intent_Last );
+        Intent Intent_Last = new Intent(TransportFlag.MainActivity);
+        Intent_Last.putExtra(TransportFlag.State, TransportFlag.Last);
+        sendBroadcast(Intent_Last);
     }
 
     /**
@@ -499,12 +497,12 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void NextItem() {
         if (mMusicList == null || mMusicList.size() == 0) {
-            Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+            Toast.makeText(this, "Music list is empty.", Toast.LENGTH_SHORT).show();
             return;
         }
-        Intent Intent_Next = new Intent( TransportFlag.MainActivity );
-        Intent_Next.putExtra( TransportFlag.State, TransportFlag.Next );
-        sendBroadcast( Intent_Next );
+        Intent Intent_Next = new Intent(TransportFlag.MainActivity);
+        Intent_Next.putExtra(TransportFlag.State, TransportFlag.Next);
+        sendBroadcast(Intent_Next);
     }
 
     /**
@@ -512,10 +510,10 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void Play_Pause() {
         if (mMusicList == null || mMusicList.size() == 0) {
-            Toast.makeText( this, "Music list is empty.", Toast.LENGTH_SHORT ).show();
+            Toast.makeText(this, "Music list is empty.", Toast.LENGTH_SHORT).show();
             return;
         }
-        Intent Intent_PlayPause = new Intent( TransportFlag.MainActivity );
+        Intent Intent_PlayPause = new Intent(TransportFlag.MainActivity);
         if (mtvName.getText().toString().equals( "Music Name" )) {
             Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.PlayDefault );
         } else {
@@ -533,142 +531,141 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
         //Service播放或者暂停播放器      测试完毕
-        sendBroadcast( Intent_PlayPause );
+        sendBroadcast(Intent_PlayPause);
     }
 
     /**
      * 发送更新拖动条给Service
      **/
     public void UpdateSeekbar(SeekBar seekBar) {
-        Intent Intent_SeekTo = new Intent( TransportFlag.MainActivity );
-        Intent_SeekTo.putExtra( TransportFlag.SeekTo, seekBar.getProgress() );
-        Intent_SeekTo.putExtra( TransportFlag.State, TransportFlag.SeekTo );
+        Intent Intent_SeekTo = new Intent(TransportFlag.MainActivity);
+        Intent_SeekTo.putExtra(TransportFlag.SeekTo, seekBar.getProgress());
+        Intent_SeekTo.putExtra(TransportFlag.State, TransportFlag.SeekTo);
         //Service控制播放器跳转至       测试完毕
-        sendBroadcast( Intent_SeekTo );
+        sendBroadcast(Intent_SeekTo);
     }
 
     /**
      * 用户提示
      **/
     public void MessageToUser() {
-        new AlertDialog.Builder( this )
-                .setTitle( "Unfinished" )
-                .setMessage( "Application is upgrading! To be expect." )
-                .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
+        new AlertDialog.Builder(this)
+                .setTitle("Unfinished")
+                .setMessage("Application is upgrading! To be expect.")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                     }
-                } ).show();
+                }).show();
     }
 
     /**
      * 分享音乐
      **/
     public void ShareMusicTo(int ShareBy) {
-        if (mtvName.getText().equals( "Music Name" )) {
-            Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
+        if (mtvName.getText().equals("Music Name")) {
+            Toast.makeText(this, "Please choose music before sharing.", Toast.LENGTH_SHORT).show();
             return;
         }
         final MusicBean shareItem = CurrentMusicItem;
         switch (ShareBy) {
             case ShareByQQ:
                 final String strUrl1 = "https://y.qq.com/portal/search.html#page=1&searchid=1&remoteplace=txt.yqq.top&t=song&w=" +
-                        shareItem.getMusicName().replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
-                                .replaceAll( ".mp3", "" ).replace( "-", "" ).replace( " ", "%20" );
-                new Thread( new Runnable() {
+                        shareItem.getMusicName().replaceAll("(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "")
+                                .replaceAll(".mp3", "").replace("-", "").replace(" ", "%20");
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        tencent = Tencent.createInstance( String.valueOf( R.string.APP_ID_QQ ), MainActivity.this );
+                        tencent = Tencent.createInstance(String.valueOf(R.string.APP_ID_QQ), MainActivity.this);
                         final Bundle params = new Bundle();
-                        params.putInt( QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT );
-                        params.putString( QQShare.SHARE_TO_QQ_TITLE, "Share music to friend" );
-                        params.putString( QQShare.SHARE_TO_QQ_SUMMARY, shareItem.getMusicName() );
-                        params.putString( QQShare.SHARE_TO_QQ_TARGET_URL, strUrl1 );
-                        params.putString( QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString( R.string.app_name ) );
-                        params.putInt( QQShare.SHARE_TO_QQ_EXT_INT, 0x00 );
-                        tencent.shareToQQ( MainActivity.this, params, new ShareListener() );
+                        params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT);
+                        params.putString(QQShare.SHARE_TO_QQ_TITLE, "Share music to friend");
+                        params.putString(QQShare.SHARE_TO_QQ_SUMMARY, shareItem.getMusicName());
+                        params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, strUrl1);
+                        params.putString(QQShare.SHARE_TO_QQ_APP_NAME, getResources().getString(R.string.app_name));
+                        params.putInt(QQShare.SHARE_TO_QQ_EXT_INT, 0x00);
+                        tencent.shareToQQ(MainActivity.this, params, new ShareListener());
                     }
-                } ).start();
+                }).start();
                 break;
             case ShareByWechat:
-                final String strUrl2 = "音乐分享 ：\n\t" + shareItem.getMusicName() + getResources().getString( R.string.share_url ) + "\n- 来自 MusicPlayerOfZengYu";
-                new Thread( new Runnable() {
+                final String strUrl2 = "音乐分享 ：\n\t" + shareItem.getMusicName() + getResources().getString(R.string.share_url) + "\n- 来自 MusicPlayerOfZengYu";
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
                         //审核分享
-//                        iwxapi = WXAPIFactory.createWXAPI( MainActivity.this, String.valueOf( R.string.APP_ID_WX ), true );
-//                        iwxapi.handleIntent( getIntent(), wxEntryActivity );
-//                        iwxapi.registerApp( String.valueOf( R.string.APP_ID_WX ) );
+//                        iwxapi = WXAPIFactory.createWXAPI(MainActivity.this, String.valueOf(R.string.APP_ID_WX), true);
+//                        iwxapi.handleIntent(getIntent(), wxEntryActivity);
+//                        iwxapi.registerApp(String.valueOf(R.string.APP_ID_WX));
 //                        if (!iwxapi.isWXAppInstalled()) {
-//                            Toast.makeText( MainActivity.this, "You haven't installed Wechat",
-//                                    Toast.LENGTH_SHORT ).show();
+//                            Toast.makeText(MainActivity.this, "You haven't installed Wechat",
+//                                    Toast.LENGTH_SHORT).show();
 //                            return;
 //                        }
 //                        WXWebpageObject webpageObject = new WXWebpageObject();
-//                        webpageObject.webpageUrl = strUrl;
-//                        WXMediaMessage msg = new WXMediaMessage( webpageObject );
+//                        webpageObject.webpageUrl = strUrl1;
+//                        WXMediaMessage msg = new WXMediaMessage(webpageObject);
 //                        msg.title = "title";
 //                        msg.description = "description";
 //                        SendMessageToWX.Req req = new SendMessageToWX.Req();
-//                        req.transaction = String.valueOf( System.currentTimeMillis() );
+//                        req.transaction = String.valueOf(System.currentTimeMillis());
 //                        req.message = msg;
 //                        req.scene = SendMessageToWX.Req.WXSceneSession;
-//                        iwxapi.sendReq( req );
+//                        iwxapi.sendReq(req);
 
                         //绕过审核分享
-                        List<PackageInfo> infoList = getPackageManager().getInstalledPackages( 0 );
+                        List<PackageInfo> infoList = getPackageManager().getInstalledPackages(0);
                         boolean isTargetExit = false;
                         if (!infoList.isEmpty()) {
                             for (PackageInfo packageInfo : infoList) {
-                                if (packageInfo.packageName.equalsIgnoreCase( "com.tencent.mm" )) {
+                                if (packageInfo.packageName.equalsIgnoreCase("com.tencent.mm")) {
                                     isTargetExit = true;
                                     break;
                                 }
                             }
                         }
                         if (isTargetExit) {
-                            Intent Intent_target = new Intent( Intent.ACTION_SEND );
-                            Intent_target.setType( "text/plain" );
-                            Intent_target.putExtra( Intent.EXTRA_TEXT, strUrl2 );
-                            Intent_target.setComponent( new ComponentName( "com.tencent.mm", "com.tencent.mm.ui.tools.ShareImgUI" ) );
-                            startActivity( Intent_target );
+                            Intent Intent_target = new Intent(Intent.ACTION_SEND);
+                            Intent_target.setType("text/plain");
+                            Intent_target.putExtra(Intent.EXTRA_TEXT, strUrl2);
+                            Intent_target.setComponent(new ComponentName("com.tencent.mm", "com.tencent.mm.ui.tools.ShareImgUI"));
+                            startActivity(Intent_target);
                         } else {
-                            Toast.makeText( MainActivity.this, "Please install Wechat.", Toast.LENGTH_SHORT ).show();
+                            Toast.makeText(MainActivity.this, "Please install Wechat.", Toast.LENGTH_SHORT).show();
                         }
                     }
-                } ).start();
+                }).start();
                 break;
             default:
                 break;
         }
     }
 
-
     /**
      * 发送音乐
      **/
     public void SendMusicTo(final int SendBy) {
-        if (mtvName.getText().equals( "Music Name" )) {
-            Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
+        if (mtvName.getText().equals("Music Name")) {
+            Toast.makeText(this, "Please choose music before sharing.", Toast.LENGTH_SHORT).show();
         } else {
-            new Thread( new Runnable() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
                     String filePath = CurrentMusicItem.getMusicPath();
-                    File file = new File( filePath );
-                    Intent Intent_target = new Intent( Intent.ACTION_SEND );
-                    Intent_target.putExtra( Intent.EXTRA_STREAM, Uri.fromFile( file ) );
-                    Intent_target.setType( "*/*" );
-                    List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities( Intent_target, 0 );
+                    File file = new File(filePath);
+                    Intent Intent_target = new Intent(Intent.ACTION_SEND);
+                    Intent_target.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                    Intent_target.setType("*/*");
+                    List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities(Intent_target, 0);
                     if (!resInfo.isEmpty()) {
                         boolean isTargetExit = false;
                         switch (SendBy) {
                             case SendByQQ:
                                 for (ResolveInfo info : resInfo) {
                                     ActivityInfo activityInfo = info.activityInfo;
-                                    if (activityInfo.packageName.contains( "com.tencent.mobileqq" )) {
-                                        Intent_target.setPackage( activityInfo.packageName );
+                                    if (activityInfo.packageName.contains("com.tencent.mobileqq")) {
+                                        Intent_target.setPackage(activityInfo.packageName);
                                         isTargetExit = true;
                                         break;
                                     }
@@ -677,8 +674,8 @@ public class MainActivity extends AppCompatActivity implements
                             case SendByWechat:
                                 for (ResolveInfo info : resInfo) {
                                     ActivityInfo activityInfo = info.activityInfo;
-                                    if (activityInfo.name.contains( "com.tencent.mm.ui.tools.ShareImgUI" )) {
-                                        Intent_target.setClassName( activityInfo.packageName, activityInfo.name );
+                                    if (activityInfo.name.contains("com.tencent.mm.ui.tools.ShareImgUI")) {
+                                        Intent_target.setClassName(activityInfo.packageName, activityInfo.name);
                                         isTargetExit = true;
                                         break;
                                     }
@@ -687,8 +684,8 @@ public class MainActivity extends AppCompatActivity implements
                             case SendByBluetooth:
                                 for (ResolveInfo info : resInfo) {
                                     ActivityInfo activityInfo = info.activityInfo;
-                                    if (activityInfo.packageName.contains( "com.android.bluetooth" )) {
-                                        Intent_target.setPackage( activityInfo.packageName );
+                                    if (activityInfo.packageName.contains("com.android.bluetooth")) {
+                                        Intent_target.setPackage(activityInfo.packageName);
                                         isTargetExit = true;
                                         break;
                                     }
@@ -698,14 +695,14 @@ public class MainActivity extends AppCompatActivity implements
                                 break;
                         }
                         if (isTargetExit) {
-                            Intent Intent_chooser = Intent.createChooser( Intent_target, "Send Music :" );
-                            startActivity( Intent_chooser );
+                            Intent Intent_chooser = Intent.createChooser(Intent_target, "Send Music :");
+                            startActivity(Intent_chooser);
                         } else {
-                            Toast.makeText( MainActivity.this, "No program to choose.", Toast.LENGTH_SHORT ).show();
+                            Toast.makeText(MainActivity.this, "No program to choose.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
-            } ).start();
+            }).start();
         }
     }
 
@@ -714,59 +711,59 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void SetRingtone() {
         final MusicBean ringtoneMusic = CurrentMusicItem;
-        if (mtvName.getText().toString().equals( "Music Name" )) {
-            Toast.makeText( this, "Please choose music before sharing.", Toast.LENGTH_SHORT ).show();
+        if (mtvName.getText().toString().equals("Music Name")) {
+            Toast.makeText(this, "Please choose music before sharing.", Toast.LENGTH_SHORT).show();
         } else {
-            new Thread( new Runnable() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    File file = new File( ringtoneMusic.getMusicPath() );
+                    File file = new File(ringtoneMusic.getMusicPath());
                     if (!file.exists()) {
-                        Toast.makeText( MainActivity.this, "File doesn't exist.", Toast.LENGTH_SHORT ).show();
+                        Toast.makeText(MainActivity.this, "File doesn't exist.", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     ContentValues values = new ContentValues();
-                    values.put( MediaStore.MediaColumns.DATA, file.getAbsolutePath() );
-                    values.put( MediaStore.MediaColumns.TITLE, file.getName() );
-                    values.put( MediaStore.MediaColumns.MIME_TYPE, "audio/*" );
-                    values.put( MediaStore.Audio.Media.IS_RINGTONE, true );
-                    values.put( MediaStore.Audio.Media.IS_NOTIFICATION, false );
-                    values.put( MediaStore.Audio.Media.IS_ALARM, false );
-                    values.put( MediaStore.Audio.Media.IS_MUSIC, false );
-                    Uri uri = MediaStore.Audio.Media.getContentUriForPath( file.getAbsolutePath() );
-                    Cursor cursor = getContentResolver().query( uri, null, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()}, null );
+                    values.put(MediaStore.MediaColumns.DATA, file.getAbsolutePath());
+                    values.put(MediaStore.MediaColumns.TITLE, file.getName());
+                    values.put(MediaStore.MediaColumns.MIME_TYPE, "audio/*");
+                    values.put(MediaStore.Audio.Media.IS_RINGTONE, true);
+                    values.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
+                    values.put(MediaStore.Audio.Media.IS_ALARM, false);
+                    values.put(MediaStore.Audio.Media.IS_MUSIC, false);
+                    Uri uri = MediaStore.Audio.Media.getContentUriForPath(file.getAbsolutePath());
+                    Cursor cursor = getContentResolver().query(uri, null, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()}, null);
                     Uri newUri = null;
                     if (cursor.moveToFirst() && cursor.getCount() > 0) {
-                        String _id = cursor.getString( 0 );
-                        getContentResolver().update( uri, values, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()} );
-                        newUri = ContentUris.withAppendedId( uri, Long.valueOf( _id ) );
+                        String _id = cursor.getString(0);
+                        getContentResolver().update(uri, values, MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()});
+                        newUri = ContentUris.withAppendedId(uri, Long.valueOf(_id));
                     }
                     final Uri NewUri = newUri;
                     Looper.prepare();
-                    new AlertDialog.Builder( MainActivity.this )
-                            .setTitle( "Are you sure to set the music as ringtone ?" )
-                            .setMessage( RingtoneManager.getRingtone( MainActivity.this, NewUri ).getTitle( MainActivity.this ) )
-                            .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Are you sure to set the music as ringtone ?")
+                            .setMessage(RingtoneManager.getRingtone(MainActivity.this, NewUri).getTitle(MainActivity.this))
+                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    RingtoneManager.setActualDefaultRingtoneUri( MainActivity.this, 1, NewUri );
-                                    if (RingtoneManager.getRingtone( MainActivity.this, NewUri ).getTitle( MainActivity.this ).replace( ".mp3", "" ).equals( ringtoneMusic.getMusicName() )) {
-                                        Toast.makeText( MainActivity.this, "Set ringtone successful!", Toast.LENGTH_SHORT ).show();
+                                    RingtoneManager.setActualDefaultRingtoneUri(MainActivity.this, 1, NewUri);
+                                    if (RingtoneManager.getRingtone(MainActivity.this, NewUri).getTitle(MainActivity.this).replace(".mp3", "").equals(ringtoneMusic.getMusicName())) {
+                                        Toast.makeText(MainActivity.this, "Set ringtone successful!", Toast.LENGTH_SHORT).show();
                                     } else {
-                                        Toast.makeText( MainActivity.this, "Set ringtone failed.", Toast.LENGTH_SHORT ).show();
+                                        Toast.makeText(MainActivity.this, "Set ringtone failed.", Toast.LENGTH_SHORT).show();
                                     }
                                     dialog.dismiss();
                                 }
-                            } )
-                            .setNegativeButton( "Cancel", new DialogInterface.OnClickListener() {
+                            })
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     dialog.dismiss();
                                 }
-                            } ).show();
+                            }).show();
                     Looper.loop();
                 }
-            } ).start();
+            }).start();
         }
     }
 
@@ -775,15 +772,15 @@ public class MainActivity extends AppCompatActivity implements
      **/
     public void ShowVersion() {
         try {
-            new AlertDialog.Builder( this )
-                    .setTitle( "Version" )
-                    .setMessage( getPackageManager().getPackageInfo( getPackageName(), 0 ).versionName )
-                    .setPositiveButton( "OK", new DialogInterface.OnClickListener() {
+            new AlertDialog.Builder(this)
+                    .setTitle("Version")
+                    .setMessage(getPackageManager().getPackageInfo(getPackageName(), 0).versionName)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
                         }
-                    } ).show();
+                    }).show();
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
@@ -793,10 +790,10 @@ public class MainActivity extends AppCompatActivity implements
      * 退出应用
      **/
     public void Exit() {
-        Intent Intent_Exit = new Intent( TransportFlag.MusicService );
-        Intent_Exit.putExtra( TransportFlag.State, TransportFlag.Exit );
+        Intent Intent_Exit = new Intent(TransportFlag.MusicService);
+        Intent_Exit.putExtra(TransportFlag.State, TransportFlag.Exit);
         //发送退出信号给Service        测试完毕
-        sendBroadcast( Intent_Exit );
+        sendBroadcast(Intent_Exit);
         MainActivity.this.finish();
     }
 
@@ -808,43 +805,36 @@ public class MainActivity extends AppCompatActivity implements
         public void onReceive(Context context, Intent intent) {
             int SeekBarMax, SeekBarTo;
             String strTextViewTo, strNextItem;
-            String strState = intent.getStringExtra( TransportFlag.State );
-            //Log.e( TransportFlag.State, strState );
+            String strState = intent.getStringExtra(TransportFlag.State);
+            Log.e(TransportFlag.State, strState + "");
             switch (strState) {
-                case TransportFlag.LoadMusic:                                       //接收加载音乐列表     测试完毕
-                    mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));
-                    CurrentMusicItem = mMusicList.get( 0 );
-                    HandlerMain.post( new Runnable() {
-                        @Override
-                        public void run() {
-                            listAdapter.setList( mMusicList );
-                            isComponentLocked = false;
-                        }
-                    } );
+                case TransportFlag.LoadMusic:                                       //接收加载音乐列表    测试完毕
+                    mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra("mMusicList"));
+                    LoadMusic();
                     break;
                 case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
-                    SeekBarTo = intent.getIntExtra( "SeekBarTo", 0 );
-                    strTextViewTo = intent.getStringExtra( "TextViewTo" );
-                    seekBar.setProgress( SeekBarTo );
-                    mtvCurrentProgress.setText( strTextViewTo );
+                    SeekBarTo = intent.getIntExtra("SeekBarTo", 0);
+                    strTextViewTo = intent.getStringExtra("TextViewTo");
+                    seekBar.setProgress(SeekBarTo);
+                    mtvCurrentProgress.setText(strTextViewTo);
                     break;
                 case TransportFlag.NextItem:                                        //接收下一首          测试完毕
-                    strNextItem = intent.getStringExtra( TransportFlag.NextItem );
+                    strNextItem = intent.getStringExtra(TransportFlag.NextItem);
                     isComponentLocked = true;
-                    Toast.makeText( MainActivity.this, "Next: " + strNextItem, Toast.LENGTH_SHORT ).show();
+                    Toast.makeText(MainActivity.this, "Next: " + strNextItem, Toast.LENGTH_SHORT).show();
                     break;
                 case TransportFlag.SeekPrepare:                                     //接收播放准备        测试完毕
-                    SeekBarMax = intent.getIntExtra( "SeekBarMax", 0 );
-                    strTextViewTo = intent.getStringExtra( "TextViewTo" );
-                    seekBar.setMax( SeekBarMax );
-                    mtvTotalProgress.setText( strTextViewTo );
-                    mtvCurrentProgress.setText( new SimpleDateFormat( "mm:ss" ).format( new Date( 0 ) ) );
-                    mbtnPlay.setText( "PAUSE" );
+                    SeekBarMax = intent.getIntExtra("SeekBarMax", 0);
+                    strTextViewTo = intent.getStringExtra("TextViewTo");
+                    seekBar.setMax(SeekBarMax);
+                    mtvTotalProgress.setText(strTextViewTo);
+                    mtvCurrentProgress.setText(new SimpleDateFormat("mm:ss").format(new Date(0)));
+                    mbtnPlay.setText("PAUSE");
                     break;
                 case TransportFlag.Prepare:                                         //接收当前条目        测试完毕
-                    CurrentMusicItem = (MusicBean) intent.getSerializableExtra( TransportFlag.Prepare );
+                    CurrentMusicItem = (MusicBean) intent.getSerializableExtra(TransportFlag.Prepare);
                     isComponentLocked = false;
-                    mtvName.setText( CurrentMusicItem.getMusicName() );
+                    mtvName.setText(CurrentMusicItem.getMusicName());
                     break;
                 default:
                     break;
