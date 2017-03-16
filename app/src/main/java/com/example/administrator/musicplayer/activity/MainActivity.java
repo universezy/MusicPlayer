@@ -136,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.switch_main).setVisibility(View.GONE);
         //设置抽屉视图关闭手势滑动
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         InitLayout();
 
         //延迟显示主界面
