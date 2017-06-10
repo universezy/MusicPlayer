@@ -3,20 +3,36 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
+
+    signingConfigs {
+        release {
+            storeFile file("key_store.jks")
+            storePassword "13608089849"
+            keyAlias "zengyu"
+            keyPassword "13608089849"
+        }
+    }
+
     defaultConfig {
         applicationId "com.example.administrator.musicplayer"
         minSdkVersion 15
         targetSdkVersion 25
         versionCode 1
-        versionName "1.0"
+        versionName "1.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
             def outputFile = output.outputFile
@@ -24,9 +40,9 @@ android {
             if (outputFile != null && outputFile.name.endsWith('.apk')) {
                 if (variant.buildType.name.equals('release')) {
                     fileName = "MusicPlayer(release).apk"
-                  //  fileName = "RELEASE${defaultConfig.versionName}.${getTime()}.apk"
+                    //  fileName = "RELEASE${defaultConfig.versionName}.${getTime()}.apk"
                 } else if (variant.buildType.name.equals('debug')) {
-                  //  fileName = "DEBUG${defaultConfig.versionName}.${getTime()}.apk"
+                    //  fileName = "DEBUG${defaultConfig.versionName}.${getTime()}.apk"
                     fileName = "MusicPlayer(debug).apk"
                 }
                 output.outputFile = new File(outputFile.parent, fileName)
@@ -34,6 +50,7 @@ android {
 
         }
     }
+
     lintOptions {
         abortOnError false
         checkReleaseBuilds false
@@ -51,5 +68,6 @@ dependencies {
     compile 'junit:junit:4.12'
     provided files('libs/mta-sdk-1.6.2.jar')
     provided files('libs/open_sdk_r5781.jar')
+    provided files('libs/jdom-2.0.6.jar')
     compile 'com.google.android.gms:play-services-appindexing:8.4.0'
 }

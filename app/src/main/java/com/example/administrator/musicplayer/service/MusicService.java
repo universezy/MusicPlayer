@@ -52,7 +52,6 @@ public class MusicService extends Service {
     private Runnable RunnableSeekbar;
     //歌词线程
     private Runnable RunnableLyric;
-
     //接收器
     protected MusicServiceReceiver musicServiceReceiver = new MusicServiceReceiver();
 
@@ -83,6 +82,10 @@ public class MusicService extends Service {
     boolean Status_MusicItem = STATUS_FAILURE;
     //扫描歌词线程结果标识
     boolean Status_Lyric = STATUS_SUCCESSFUL;
+    //播放线程标识
+    boolean play = false;
+    //响铃标识
+    boolean ring = false;
 
     /*****************************************************************************************
      * *************************************    分割线    **************************************
@@ -95,8 +98,8 @@ public class MusicService extends Service {
         this.mainActivity = MainActivity.mainActivity;
 
         //注册接收器
-        IntentFilter intentFilter = new IntentFilter( TransportFlag.MainActivity );
-        registerReceiver( musicServiceReceiver, intentFilter );
+        IntentFilter intentFilter = new IntentFilter(TransportFlag.MainActivity);
+        registerReceiver(musicServiceReceiver, intentFilter);
 
         LoadMusic();
 
@@ -104,9 +107,10 @@ public class MusicService extends Service {
         RunnablePlay = new Runnable() {
             @Override
             public void run() {
+                play = true;
                 mediaplayer.start();
-                HandlerService.post( RunnableSeekbar );
-                HandlerService.post( RunnableLyric );
+                HandlerService.post(RunnableSeekbar);
+                HandlerService.post(RunnableLyric);
             }
         };
 
@@ -115,13 +119,15 @@ public class MusicService extends Service {
             @Override
             public void run() {
                 try {
-                    Intent Intent_UpdateSeekBar = new Intent( TransportFlag.MusicService );
-                    Intent_UpdateSeekBar.putExtra( "SeekBarTo", mediaplayer.getCurrentPosition() );
-                    Intent_UpdateSeekBar.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getCurrentPosition() ) ) );
-                    Intent_UpdateSeekBar.putExtra( TransportFlag.State, TransportFlag.SeekTo );
-                    //更新拖动条信息给MainActivity      测试完毕
-                    sendBroadcast( Intent_UpdateSeekBar );
-                    HandlerService.postDelayed( RunnableSeekbar, 1000 );
+                    if (play) {
+                        Intent Intent_UpdateSeekBar = new Intent(TransportFlag.MusicService);
+                        Intent_UpdateSeekBar.putExtra("SeekBarTo", mediaplayer.getCurrentPosition());
+                        Intent_UpdateSeekBar.putExtra("TextViewTo", new SimpleDateFormat("mm:ss").format(new Date(mediaplayer.getCurrentPosition())));
+                        Intent_UpdateSeekBar.putExtra(TransportFlag.State, TransportFlag.SeekTo);
+                        //更新拖动条信息给MainActivity      测试完毕
+                        sendBroadcast(Intent_UpdateSeekBar);
+                    }
+                    HandlerService.postDelayed(RunnableSeekbar, 1000);
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -132,19 +138,21 @@ public class MusicService extends Service {
         RunnableLyric = new Runnable() {
             @Override
             public void run() {
-                Intent Intent_UpdateLyric = new Intent( TransportFlag.MusicService );
-                Intent_UpdateLyric.putExtra( "CurrentPosition", mediaplayer.getCurrentPosition() );
-                Intent_UpdateLyric.putExtra( TransportFlag.State, TransportFlag.LyricTo );
-                //更新歌词给LyricActivity
-                sendBroadcast( Intent_UpdateLyric );
-                HandlerService.postDelayed( RunnableLyric, 300 );
+                if (play) {
+                    Intent Intent_UpdateLyric = new Intent(TransportFlag.MusicService);
+                    Intent_UpdateLyric.putExtra("CurrentPosition", mediaplayer.getCurrentPosition());
+                    Intent_UpdateLyric.putExtra(TransportFlag.State, TransportFlag.LyricTo);
+                    //更新歌词给LyricActivity
+                    sendBroadcast(Intent_UpdateLyric);
+                }
+                HandlerService.postDelayed(RunnableLyric, 300);
             }
         };
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand( intent, flags, startId );
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -166,9 +174,9 @@ public class MusicService extends Service {
         mediaplayer.stop();
         mediaplayer.release();
         //将线程销毁掉
-        HandlerService.removeCallbacks( RunnableSeekbar );
-        HandlerService.removeCallbacks( RunnableLyric );
-        unregisterReceiver( musicServiceReceiver );
+        HandlerService.removeCallbacks(RunnableSeekbar);
+        HandlerService.removeCallbacks(RunnableLyric);
+        unregisterReceiver(musicServiceReceiver);
         super.onDestroy();
     }
 
@@ -188,23 +196,23 @@ public class MusicService extends Service {
         while (!isMatchFinished) {
         }
         sendMusicList();
-        ModeSetting( mode );
+        ModeSetting(mode);
     }
 
     /**
      * 获取音乐属性
      **/
     public String getMusicAttribution(Cursor cursor, String type) {
-        return cursor.getString( cursor.getColumnIndexOrThrow( type ) )
-                .replaceAll( "(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "" )
-                .replaceAll( ".mp3", "" );
+        return cursor.getString(cursor.getColumnIndexOrThrow(type))
+                .replaceAll("(\\(.*?\\))?(\\[.*?\\])?(\\{.*?\\})?", "")
+                .replaceAll(".mp3", "");
     }
 
     /**
      * 扫描音乐信息
      **/
     public void ScanMusicItem() {
-        new Thread( new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 mMusicList.clear();
@@ -213,23 +221,24 @@ public class MusicService extends Service {
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null,
                         MediaStore.Audio.Media.DATA + " like ?",
                         new String[]{Environment.getExternalStorageDirectory() + File.separator + "%"},
-                        MediaStore.Audio.Media.DEFAULT_SORT_ORDER );
+                        MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
                 if (cursor != null) {
                     for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-                        String isMusic = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.IS_MUSIC ) );
-                        if (isMusic != null && isMusic.equals( "" )) continue;
+                        String isMusic = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC));
+                        if (isMusic != null && isMusic.equals("")) continue;
                         String string;
                         MusicBean music;
-                        if ((string = cursor.getString( cursor.getColumnIndexOrThrow( MediaStore.Audio.Media.DATA ) )).endsWith( ".mp3" )) {
+                        if ((string = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA))).endsWith(".mp3")) {
                             music = new MusicBean();
-                            music.setMusicPath( string );
-                            string = getMusicAttribution( cursor, MediaStore.Audio.Media.TITLE );
-                            music.setMusicName( (string != null) ? string : "null" );
-                            string = getMusicAttribution( cursor, MediaStore.Audio.Media.ARTIST );
-                            music.setMusicArtist( (string != null) ? string : "null" );
-                            string = getMusicAttribution( cursor, MediaStore.Audio.Media.ALBUM );
-                            music.setMusicAlbum( (string != null) ? string : "null" );
-                            mMusicList.add( music );
+                            music.setMusicPath(string);
+                            string = getMusicAttribution(cursor, MediaStore.Audio.Media.TITLE);
+                            music.setMusicName((string != null) ? string : "null");
+                            string = getMusicAttribution(cursor, MediaStore.Audio.Media.ARTIST);
+                            music.setMusicArtist((string != null) ? string : "null");
+                            string = getMusicAttribution(cursor, MediaStore.Audio.Media.ALBUM);
+                            music.setMusicAlbum((string != null) ? string : "null");
+                            mMusicList.add(music);
+
                         }
                     }
                     cursor.close();
@@ -237,7 +246,7 @@ public class MusicService extends Service {
                 }
                 isScanMusicItemFinished = STATUS_FINISH;
             }
-        } ).start();
+        }).start();
     }
 
     /**
@@ -245,15 +254,15 @@ public class MusicService extends Service {
      **/
     public void ScanLyric() {
         //检测SD卡是否存在
-        new Thread( new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                if (Environment.getExternalStorageState().equals( Environment.MEDIA_MOUNTED )) {
-                    Traverse( Environment.getExternalStorageDirectory() );
+                if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                    Traverse(Environment.getExternalStorageDirectory());
                     isScanLyricFinished = STATUS_FINISH;
                 }
             }
-        } ).start();
+        }).start();
     }
 
     /**
@@ -264,10 +273,10 @@ public class MusicService extends Service {
         if (files != null) {
             for (File f : files) {
                 if (f.isDirectory()) {
-                    Traverse( f );
+                    Traverse(f);
                 } else {
-                    if (f.getName().endsWith( ".lrc" )) {
-                        LyricList.add( f );
+                    if (f.getName().endsWith(".lrc")) {
+                        LyricList.add(f);
                         Status_Lyric = STATUS_SUCCESSFUL;
                     }
                 }
@@ -280,56 +289,56 @@ public class MusicService extends Service {
      **/
     public void Parsing(MusicBean music) {
         final MusicBean musicBean = music;
-        File file = new File( musicBean.getLyricPath() );
+        File file = new File(musicBean.getLyricPath());
         ArrayList<LyricItem> LyricArray = new ArrayList<>();
         try {
-            FileInputStream fileInputStream = new FileInputStream( file );
-            InputStreamReader inputStreamReader = new InputStreamReader( fileInputStream, "utf-8" );
-            BufferedReader bufferedReader = new BufferedReader( inputStreamReader );
+            FileInputStream fileInputStream = new FileInputStream(file);
+            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "utf-8");
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
             String s;
             int index;
             while ((s = bufferedReader.readLine()) != null) {
-                if ((index = s.indexOf( "[ar:" )) != -1) {
+                if ((index = s.indexOf("[ar:")) != -1) {
                     //     this.strArtist = s.substring( index + 4, s.indexOf( "]" ) );
-                } else if ((index = s.indexOf( "[ti:" )) != -1) {
+                } else if ((index = s.indexOf("[ti:")) != -1) {
                     //     this.strTitle = s.substring( index + 4, s.indexOf( "]" ) );
-                } else if ((index = s.indexOf( "[al:" )) != -1) {
+                } else if ((index = s.indexOf("[al:")) != -1) {
                     //     this.strAlbum = s.substring( index + 4, s.indexOf( "]" ) );
-                } else if ((index = s.indexOf( "[by:" )) != -1) {
+                } else if ((index = s.indexOf("[by:")) != -1) {
                     //     this.strBy = s.substring( index + 4, s.indexOf( "]" ) );
-                } else if ((index = s.indexOf( "[offset:" )) != -1) {
+                } else if ((index = s.indexOf("[offset:")) != -1) {
                     //     this.offset = Integer.parseInt( s.substring( index + 8, s.indexOf( "]" ) ) );
-                } else if (s.indexOf( ":" ) != -1 && s.indexOf( "." ) != -1) {
+                } else if (s.indexOf(":") != -1 && s.indexOf(".") != -1) {
                     //分离出歌词内容
-                    String StrLyric = s.substring( s.lastIndexOf( "]" ) + 1 );
+                    String StrLyric = s.substring(s.lastIndexOf("]") + 1);
                     //分离出时间
-                    String tempTime = s.substring( 0, s.lastIndexOf( "]" ) );
+                    String tempTime = s.substring(0, s.lastIndexOf("]"));
                     //多个时间点重复相同歌词
-                    if (tempTime.indexOf( "][" ) != -1) {
-                        String[] temp1 = tempTime.split( "]" );
+                    if (tempTime.indexOf("][") != -1) {
+                        String[] temp1 = tempTime.split("]");
                         for (String str : temp1) {
                             LyricItem lyricItem = new LyricItem();
                             int time;
-                            int minute = Integer.parseInt( str.substring( str.indexOf( "[" ) + 1, str.indexOf( ":" ) ) );
-                            int second = Integer.parseInt( str.substring( str.indexOf( ":" ) + 1, str.indexOf( "." ) ) );
-                            int millisecond = Integer.parseInt( str.substring( str.indexOf( "." ) + 1 ) );
+                            int minute = Integer.parseInt(str.substring(str.indexOf("[") + 1, str.indexOf(":")));
+                            int second = Integer.parseInt(str.substring(str.indexOf(":") + 1, str.indexOf(".")));
+                            int millisecond = Integer.parseInt(str.substring(str.indexOf(".") + 1));
                             time = minute * 60000 + second * 1000 + millisecond;
-                            lyricItem.setLyric( StrLyric );
-                            lyricItem.setTime( time );
-                            LyricArray.add( lyricItem );
+                            lyricItem.setLyric(StrLyric);
+                            lyricItem.setTime(time);
+                            LyricArray.add(lyricItem);
                         }
                     }
                     //一个时间点对应一个歌词
                     else {
                         LyricItem lyricItem = new LyricItem();
                         int time;
-                        int minute = Integer.parseInt( tempTime.substring( tempTime.indexOf( "[" ) + 1, tempTime.indexOf( ":" ) ) );
-                        int second = Integer.parseInt( tempTime.substring( tempTime.indexOf( ":" ) + 1, tempTime.indexOf( "." ) ) );
-                        int millisecond = Integer.parseInt( tempTime.substring( tempTime.indexOf( "." ) + 1 ) );
+                        int minute = Integer.parseInt(tempTime.substring(tempTime.indexOf("[") + 1, tempTime.indexOf(":")));
+                        int second = Integer.parseInt(tempTime.substring(tempTime.indexOf(":") + 1, tempTime.indexOf(".")));
+                        int millisecond = Integer.parseInt(tempTime.substring(tempTime.indexOf(".") + 1));
                         time = minute * 60000 + second * 1000 + millisecond;
-                        lyricItem.setLyric( StrLyric );
-                        lyricItem.setTime( time );
-                        LyricArray.add( lyricItem );
+                        lyricItem.setLyric(StrLyric);
+                        lyricItem.setTime(time);
+                        LyricArray.add(lyricItem);
                     }
                 }
             }
@@ -343,8 +352,8 @@ public class MusicService extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Collections.sort( LyricArray, new SortByTime() );
-        musicBean.setLyricList( LyricArray );
+        Collections.sort(LyricArray, new SortByTime());
+        musicBean.setLyricList(LyricArray);
     }
 
     /**
@@ -352,21 +361,22 @@ public class MusicService extends Service {
      **/
     public void MatchMusicItemWithLyric() {
         if (Status_MusicItem && Status_Lyric) {
-            new Thread( new Runnable() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
                     for (MusicBean musicBean : mMusicList) {
                         for (File file : LyricList) {
-                            if (musicBean.getMusicName().replace( " ", "" ).equals( file.getName().replace( " ", "" ).replace( ".lrc", "" ) )) {
-                                musicBean.setLyricPath( file.getAbsolutePath() );
-                                Parsing( musicBean );
+                            if (musicBean.getMusicName().replace(" ", "").contains(file.getName().replace(" ", "").replace(".lrc", ""))
+                                    || file.getName().replace(" ", "").replace(".lrc", "").contains(musicBean.getMusicName().replace(" ", ""))) {
+                                musicBean.setLyricPath(file.getAbsolutePath());
+                                Parsing(musicBean);
                                 break;
                             }
                         }
                     }
                     isMatchFinished = STATUS_FINISH;
                 }
-            } ).start();
+            }).start();
         }
     }
 
@@ -374,11 +384,11 @@ public class MusicService extends Service {
      * 发送列表给Service
      **/
     public void sendMusicList() {
-        Intent Intent_SendMusicList = new Intent( TransportFlag.MusicService );
-        Intent_SendMusicList.putExtra( "mMusicList", mMusicList );
-        Intent_SendMusicList.putExtra( TransportFlag.State, TransportFlag.LoadMusic );
+        Intent Intent_SendMusicList = new Intent(TransportFlag.MusicService);
+        Intent_SendMusicList.putExtra("mMusicList", mMusicList);
+        Intent_SendMusicList.putExtra(TransportFlag.State, TransportFlag.LoadMusic);
         //将播放列表发给MainActivity        测试完毕
-        sendBroadcast( Intent_SendMusicList );
+        sendBroadcast(Intent_SendMusicList);
     }
 
     /**
@@ -389,7 +399,8 @@ public class MusicService extends Service {
         PlayArrayIndex = (PlayArrayIndex + mMusicList.size()) % mMusicList.size();
         ItemLocationIndex = PlayArray[PlayArrayIndex];
         mediaplayer.stop();
-        playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
+        play = true;
+        playMusic(mMusicList.get(ItemLocationIndex).getMusicPath());
     }
 
     /**
@@ -400,7 +411,8 @@ public class MusicService extends Service {
         PlayArrayIndex = PlayArrayIndex % mMusicList.size();
         ItemLocationIndex = PlayArray[PlayArrayIndex];
         mediaplayer.stop();
-        playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
+        play = true;
+        playMusic(mMusicList.get(ItemLocationIndex).getMusicPath());
     }
 
     /**
@@ -408,53 +420,54 @@ public class MusicService extends Service {
      **/
     public void playMusic(String path) {
         if (path != null) {
-            HandlerService.removeCallbacks( RunnableSeekbar );
+            HandlerService.removeCallbacks(RunnableSeekbar);
             try {
                 mediaplayer.reset();
-                mediaplayer.setDataSource( path );
-                mediaplayer.setAudioStreamType( AudioManager.STREAM_MUSIC );
-                mediaplayer.setOnPreparedListener( new MediaPlayer.OnPreparedListener() {
+                mediaplayer.setDataSource(path);
+                mediaplayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mediaplayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
                     public void onPrepared(MediaPlayer mp) {
-                        Intent Intent_SeekPrepare = new Intent( TransportFlag.MusicService );
-                        Intent_SeekPrepare.putExtra( "SeekBarMax", mediaplayer.getDuration() );
-                        Intent_SeekPrepare.putExtra( "TextViewTo", new SimpleDateFormat( "mm:ss" ).format( new Date( mediaplayer.getDuration() ) ) );
-                        Intent_SeekPrepare.putExtra( TransportFlag.State, TransportFlag.SeekPrepare );
+                        Intent Intent_SeekPrepare = new Intent(TransportFlag.MusicService);
+                        Intent_SeekPrepare.putExtra("SeekBarMax", mediaplayer.getDuration());
+                        Intent_SeekPrepare.putExtra("TextViewTo", new SimpleDateFormat("mm:ss").format(new Date(mediaplayer.getDuration())));
+                        Intent_SeekPrepare.putExtra(TransportFlag.State, TransportFlag.SeekPrepare);
                         //发送拖动条最大值和置0给Activity      测试完毕
-                        sendBroadcast( Intent_SeekPrepare );
+                        sendBroadcast(Intent_SeekPrepare);
 
-                        Intent Intent_Prepare = new Intent( TransportFlag.MusicService );
-                        Intent_Prepare.putExtra( TransportFlag.Prepare, mMusicList.get( ItemLocationIndex ) );
-                        Intent_Prepare.putExtra( TransportFlag.State, TransportFlag.Prepare );
+                        Intent Intent_Prepare = new Intent(TransportFlag.MusicService);
+                        Intent_Prepare.putExtra(TransportFlag.Prepare, mMusicList.get(ItemLocationIndex));
+                        Intent_Prepare.putExtra(TransportFlag.State, TransportFlag.Prepare);
                         //发送准备指令给Activity
-                        sendBroadcast( Intent_Prepare );
+                        sendBroadcast(Intent_Prepare);
                     }
-                } );
+                });
                 mediaplayer.prepare();
-                mediaplayer.setOnCompletionListener( new MediaPlayer.OnCompletionListener() {
+                mediaplayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
+                        play = false;
                         PlayArrayIndex++;
                         PlayArrayIndex = PlayArrayIndex % mMusicList.size();
                         ItemLocationIndex = PlayArray[PlayArrayIndex];
 
-                        Intent Intent_NextItem = new Intent( TransportFlag.MusicService );
-                        Intent_NextItem.putExtra( TransportFlag.NextItem, mMusicList.get( ItemLocationIndex ).getMusicName() );
-                        Intent_NextItem.putExtra( TransportFlag.State, TransportFlag.NextItem );
+                        Intent Intent_NextItem = new Intent(TransportFlag.MusicService);
+                        Intent_NextItem.putExtra(TransportFlag.NextItem, mMusicList.get(ItemLocationIndex).getMusicName());
+                        Intent_NextItem.putExtra(TransportFlag.State, TransportFlag.NextItem);
                         //发送下一首给MainActivity用于Toast     测试完毕
-                        sendBroadcast( Intent_NextItem );
-                        HandlerService.postDelayed( new Runnable() {
+                        sendBroadcast(Intent_NextItem);
+                        HandlerService.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
+                                playMusic(mMusicList.get(ItemLocationIndex).getMusicPath());
                             }
-                        }, 2000 );
+                        }, 2000);
                     }
-                } );
+                });
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            HandlerService.postDelayed( RunnablePlay, 1000 );
+            HandlerService.postDelayed(RunnablePlay, 1000);
         }
     }
 
@@ -475,12 +488,12 @@ public class MusicService extends Service {
                 }
                 break;
             case TransportFlag.RandomPlay:
-                ModeSetting( TransportFlag.OrderPlay );
+                ModeSetting(TransportFlag.OrderPlay);
                 int temp;
                 //生成随机播放列表
                 Random random = new Random();
                 for (int i = 0; i < PlayArray.length; i++) {
-                    int j = random.nextInt( PlayArray.length );
+                    int j = random.nextInt(PlayArray.length);
                     temp = PlayArray[i];
                     PlayArray[i] = PlayArray[j];
                     PlayArray[j] = temp;
@@ -498,51 +511,61 @@ public class MusicService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             // 如果是拨打电话
-            if (intent.getAction().equals( Intent.ACTION_NEW_OUTGOING_CALL )) {
+            if (intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
                 mediaplayer.pause();
-                mainActivity.mbtnPlay.setText( "PAUSE" );
+                play = false;
+                mainActivity.mbtnPlay.setText("PAUSE");
             }
             // 如果是来电
             else {
-                TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService( Service.TELEPHONY_SERVICE );
+                TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Service.TELEPHONY_SERVICE);
                 switch (telephonyManager.getCallState()) {
                     case TelephonyManager.CALL_STATE_RINGING:       //响铃
+                        ring = true;
                         mediaplayer.pause();
-                        mainActivity.mbtnPlay.setText( "PAUSE" );
+                        play = false;
+                        mainActivity.mbtnPlay.setText("PAUSE");
                         break;
                     case TelephonyManager.CALL_STATE_OFFHOOK:       //接听
                         mediaplayer.pause();
-                        mainActivity.mbtnPlay.setText( "PAUSE" );
+                        play = false;
+                        mainActivity.mbtnPlay.setText("PAUSE");
                         break;
                     case TelephonyManager.CALL_STATE_IDLE:          //挂断
+                        play = true;
                         mediaplayer.start();
-                        mainActivity.mbtnPlay.setText( "PLAY" );
+                        if (ring) {
+                            mainActivity.mbtnPlay.setText("PLAY");
+                            ring = false;
+                        }
                         break;
                 }
             }
             String path;
             int progress;
-            String state = intent.getStringExtra( TransportFlag.State );
-            //Log.e( TransportFlag.State, state );
+            String state = intent.getStringExtra(TransportFlag.State);
+            Log.e(TransportFlag.State, state + "");
             switch (state) {
                 case TransportFlag.LoadMusic:                                   //接收加载音乐           测试完毕
-                    mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra( "mMusicList" ));
-                    ModeSetting( mode );
+                    mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra("mMusicList"));
+                    ModeSetting(mode);
                     break;
                 case TransportFlag.PlayDefault:                                 //接收默认播放曲目       测试完毕
-                    playMusic( mMusicList.get( ItemLocationIndex ).getMusicPath() );
+                    playMusic(mMusicList.get(ItemLocationIndex).getMusicPath());
                     break;
                 case TransportFlag.PlayList:                                    //接收按列表播放         测试完毕
-                    ItemLocationIndex = intent.getIntExtra( "position", ItemLocationIndex );
-                    PlayArrayIndex = intent.getIntExtra( "position", PlayArrayIndex );
-                    path = intent.getStringExtra( "path" );
-                    playMusic( path );
+                    ItemLocationIndex = intent.getIntExtra("position", ItemLocationIndex);
+                    PlayArrayIndex = intent.getIntExtra("position", PlayArrayIndex);
+                    path = intent.getStringExtra("path");
+                    playMusic(path);
                     break;
                 case TransportFlag.Play:                                        //接收媒体播放器播放     测试完毕
+                    play = true;
                     mediaplayer.start();
                     break;
                 case TransportFlag.Pause:                                       //接收媒体播放器暂停     测试完毕
                     mediaplayer.pause();
+                    play = false;
                     break;
                 case TransportFlag.Last:                                        //接收上一首             测试完毕
                     LastMusic();
@@ -551,12 +574,12 @@ public class MusicService extends Service {
                     NextMusic();
                     break;
                 case TransportFlag.SeekTo:                                      //接收播放器跳转至       测试完毕
-                    progress = intent.getIntExtra( TransportFlag.SeekTo, 0 );
-                    mediaplayer.seekTo( progress );
+                    progress = intent.getIntExtra(TransportFlag.SeekTo, 0);
+                    mediaplayer.seekTo(progress);
                     break;
                 case TransportFlag.Mode:                                        //接收播放器模式设置     测试完毕
-                    mode = intent.getIntExtra( TransportFlag.Mode, 0 );
-                    ModeSetting( mode );
+                    mode = intent.getIntExtra(TransportFlag.Mode, 0);
+                    ModeSetting(mode);
                     break;
                 case TransportFlag.Exit:                                        //接收退出信号           测试完毕
                     MusicService.this.stopSelf();
