@@ -5,7 +5,7 @@ public class TransportFlag {
     public static final String MainActivity = "TransportFlag.MainActivity";
     public static final String MusicService = "TransportFlag.MusicService";
     public static final String LyricActivity = "TransportFlag.LyricActivity";
-    public static final String LoadMusic = "TransportFlag.LoadMusic";
+    public static final String LoadMusic = "TransportFlag.loadMusic";
     public static final String PlayDefault = "TransportFlag.PlayDefault";
     public static final String PlayList = "TransportFlag.PlayList";
     public static final String Play = "TransportFlag.Play";
@@ -14,8 +14,8 @@ public class TransportFlag {
     public static final String Next = "TransportFlag.Next";
     public static final String SeekTo = "TransportFlag.SeekTo";
     public static final String SeekPrepare = "TransportFlag.SeekPrepare";
-    public static final String NextItem = "TransportFlag.NextItem";
-    public static final String Exit = "TransportFlag.Exit";
+    public static final String NextItem = "TransportFlag.nextItem";
+    public static final String Exit = "TransportFlag.exit";
     public static final String Mode = "TransportFlag.Mode";
     public static final String LyricTo = "TransportFlag.LyricTo";
     public static final String Prepare = "TransportFlag.Prepare";

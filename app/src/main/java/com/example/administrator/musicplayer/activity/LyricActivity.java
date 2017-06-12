@@ -80,19 +80,19 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstance);
         setContentView(R.layout.activity_music_item);
         this.mainActivity = MainActivity.mainActivity;
-        InitLayout();
+        initLayout();
 
         //注册接收器
         IntentFilter intentFilter = new IntentFilter(TransportFlag.MusicService);
         registerReceiver(lyricActivityReceiver, intentFilter);
 
-        InitComponent();
+        initComponent();
     }
 
     /**
      * 初始化布局
      **/
-    public void InitLayout() {
+    public void initLayout() {
         //设置视图
         lyricView = (LyricView) findViewById(R.id.vLyric);
 
@@ -139,13 +139,13 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 setPlayMode();
                 break;
             case R.id.btnLast:
-                mainActivity.LastItem();
+                mainActivity.lastItem();
                 break;
             case R.id.btnNext:
-                mainActivity.NextItem();
+                mainActivity.nextItem();
                 break;
             case R.id.btnPlay:
-                Play_Pause();
+                alterPlayAndPause();
                 break;
             default:
                 break;
@@ -176,7 +176,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        mainActivity.UpdateSeekbar(seekBar);
+        mainActivity.updateSeekbar(seekBar);
     }
 
     /*****************************************************************************************
@@ -186,7 +186,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     /**
      * *跳转页面后初始化
      */
-    public void InitComponent() {
+    public void initComponent() {
         CurrentMusicItem = mainActivity.CurrentMusicItem;
         HandlerLyric.post(new Runnable() {
             @Override
@@ -200,7 +200,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 mtvArtist.setText("Artist : " + CurrentMusicItem.getMusicArtist());
                 mtvAlbum.setText("Album : " + CurrentMusicItem.getMusicAlbum());
                 mode = mainActivity.mode;
-                LoadLyric();
+                loadLyric();
             }
         });
     }
@@ -208,7 +208,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     /**
      * 加载歌词资源
      **/
-    public void LoadLyric() {
+    public void loadLyric() {
         isComponentLocked = true;
         mtvName.setText("Name : " + CurrentMusicItem.getMusicName());
         mtvArtist.setText("Artist : " + CurrentMusicItem.getMusicArtist());
@@ -242,7 +242,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     /**
      * 绘制歌词
      **/
-    public void DrawLyric() {
+    public void drawLyric() {
         HandlerLyric.post(new Runnable() {
             @Override
             public void run() {
@@ -255,32 +255,32 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     /**
      * 调整索引位置
      **/
-    public void AdjustIndex(int CurrentTime) {
+    public void adjustIndex(int CurrentTime) {
         Log.e("CurrentTime", CurrentTime + "");
         Log.e("Index", Index + "");
         if (Index == 0) {                           //索引位于数组首位
             if (CurrentTime < CurrentMusicItem.getLyricList().get(Index + 1).getTime()) {
-                DrawLyric();
+                drawLyric();
             } else {
                 Index++;
-                AdjustIndex(CurrentTime);
+                adjustIndex(CurrentTime);
             }
         } else if (Index == sizeOfList - 1) {       //索引位于数组末位
             if (CurrentTime < CurrentMusicItem.getLyricList().get(Index).getTime() - 300) {
                 Index--;
-                AdjustIndex(CurrentTime);
+                adjustIndex(CurrentTime);
             } else {
-                DrawLyric();
+                drawLyric();
             }
         } else {                                    //索引位于数组中间
             if (CurrentTime < CurrentMusicItem.getLyricList().get(Index).getTime() - 300) {
                 Index--;
-                AdjustIndex(CurrentTime);
+                adjustIndex(CurrentTime);
             } else if (CurrentTime < CurrentMusicItem.getLyricList().get(Index + 1).getTime() - 300) {
-                DrawLyric();
+                drawLyric();
             } else {
                 Index++;
-                AdjustIndex(CurrentTime);
+                adjustIndex(CurrentTime);
             }
         }
     }
@@ -321,7 +321,7 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
     /**
      * 播放和暂停切换
      **/
-    public void Play_Pause() {
+    public void alterPlayAndPause() {
         Intent Intent_PlayPause = new Intent(TransportFlag.MainActivity);
         switch (mbtnPlay.getText().toString()) {
             case "PLAY":
@@ -377,13 +377,13 @@ public class LyricActivity extends AppCompatActivity implements View.OnClickList
                 case TransportFlag.LyricTo:                                             //接收当前歌词位置    测试完毕
                     int CurrentPosition = intent.getIntExtra("CurrentPosition", 0);
                     if (isLyricPrepared) {
-                        AdjustIndex(CurrentPosition);
+                        adjustIndex(CurrentPosition);
                     }
                     break;
                 case TransportFlag.Prepare:                                             //接收播放准备        测试完毕
                     CurrentMusicItem = (MusicBean) intent.getSerializableExtra(TransportFlag.Prepare);
                     mtvName.setText(CurrentMusicItem.getMusicName());
-                    LoadLyric();
+                    loadLyric();
                     break;
                 default:
                     break;

@@ -4,8 +4,6 @@
       <root url="jar://$PROJECT_DIR$/app/libs/jdom-2.0.6.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-      <root url="jar://$PROJECT_DIR$/app/libs/jdom-2.0.6/jdom-2.0.6-sources.jar!/" />
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>

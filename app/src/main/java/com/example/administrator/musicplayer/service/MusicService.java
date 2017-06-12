@@ -196,7 +196,7 @@ public class MusicService extends Service {
         while (!isMatchFinished) {
         }
         sendMusicList();
-        ModeSetting(mode);
+        setMode(mode);
     }
 
     /**
@@ -394,7 +394,7 @@ public class MusicService extends Service {
     /**
      * 上一首
      **/
-    public void LastMusic() {
+    public void lastMusic() {
         PlayArrayIndex--;
         PlayArrayIndex = (PlayArrayIndex + mMusicList.size()) % mMusicList.size();
         ItemLocationIndex = PlayArray[PlayArrayIndex];
@@ -406,7 +406,7 @@ public class MusicService extends Service {
     /**
      * 下一首
      **/
-    public void NextMusic() {
+    public void nextMusic() {
         PlayArrayIndex++;
         PlayArrayIndex = PlayArrayIndex % mMusicList.size();
         ItemLocationIndex = PlayArray[PlayArrayIndex];
@@ -474,7 +474,7 @@ public class MusicService extends Service {
     /**
      * 播放模式设置
      **/
-    public void ModeSetting(int mode) {
+    public void setMode(int mode) {
         PlayArray = new int[mMusicList.size()];
         switch (mode) {
             case TransportFlag.OrderPlay:
@@ -488,7 +488,7 @@ public class MusicService extends Service {
                 }
                 break;
             case TransportFlag.RandomPlay:
-                ModeSetting(TransportFlag.OrderPlay);
+                setMode(TransportFlag.OrderPlay);
                 int temp;
                 //生成随机播放列表
                 Random random = new Random();
@@ -548,7 +548,7 @@ public class MusicService extends Service {
             switch (state) {
                 case TransportFlag.LoadMusic:                                   //接收加载音乐           测试完毕
                     mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra("mMusicList"));
-                    ModeSetting(mode);
+                    setMode(mode);
                     break;
                 case TransportFlag.PlayDefault:                                 //接收默认播放曲目       测试完毕
                     playMusic(mMusicList.get(ItemLocationIndex).getMusicPath());
@@ -568,10 +568,10 @@ public class MusicService extends Service {
                     play = false;
                     break;
                 case TransportFlag.Last:                                        //接收上一首             测试完毕
-                    LastMusic();
+                    lastMusic();
                     break;
                 case TransportFlag.Next:                                        //接收下一首             测试完毕
-                    NextMusic();
+                    nextMusic();
                     break;
                 case TransportFlag.SeekTo:                                      //接收播放器跳转至       测试完毕
                     progress = intent.getIntExtra(TransportFlag.SeekTo, 0);
@@ -579,7 +579,7 @@ public class MusicService extends Service {
                     break;
                 case TransportFlag.Mode:                                        //接收播放器模式设置     测试完毕
                     mode = intent.getIntExtra(TransportFlag.Mode, 0);
-                    ModeSetting(mode);
+                    setMode(mode);
                     break;
                 case TransportFlag.Exit:                                        //接收退出信号           测试完毕
                     MusicService.this.stopSelf();

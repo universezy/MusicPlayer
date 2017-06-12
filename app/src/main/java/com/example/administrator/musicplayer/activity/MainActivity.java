@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements
         //设置抽屉视图关闭手势滑动
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        InitLayout();
+        initLayout();
 
         //延迟显示主界面
         HandlerMain.postDelayed(new Runnable() {
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 初始化布局
      **/
-    public void InitLayout() {
+    public void initLayout() {
         //设置列表适配器
         listAdapter = new ListAdapter(getApplicationContext(), R.layout.item_music_list_layout);
         listAdapter.setList(mMusicList);
@@ -266,13 +266,13 @@ public class MainActivity extends AppCompatActivity implements
                 setPlayMode();
                 break;
             case R.id.btnLast:          //上一首
-                LastItem();
+                lastItem();
                 break;
             case R.id.btnNext:          //下一首
-                NextItem();
+                nextItem();
                 break;
             case R.id.btnPlay:          //播放和暂停
-                Play_Pause();
+                alterPlayAndPause();
                 break;
             default:
                 break;
@@ -299,22 +299,22 @@ public class MainActivity extends AppCompatActivity implements
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.nav_shareByQQ) {                 //通过QQ分享            已实现
-            ShareMusicTo(ShareByQQ);
+            shareMusicTo(ShareByQQ);
         } else if (id == R.id.nav_shareByWechat) {      //通过微信分享
-            ShareMusicTo(ShareByWechat);
-            //MessageToUser();
+            shareMusicTo(ShareByWechat);
+            //messageToUser();
         } else if (id == R.id.nav_sendByQQ) {           //通过QQ发送            已实现
-            SendMusicTo(SendByQQ);
+            sendMusicTo(SendByQQ);
         } else if (id == R.id.nav_sendByWechat) {       //通过微信发送          已实现
-            SendMusicTo(SendByWechat);
+            sendMusicTo(SendByWechat);
         } else if (id == R.id.nav_sendByBluetooth) {    //通过蓝牙发送          已实现
-            SendMusicTo(SendByBluetooth);
+            sendMusicTo(SendByBluetooth);
         } else if (id == R.id.nav_setToRingtone) {      //设为铃声              已实现
-            SetRingtone();
+            setRingtone();
         } else if (id == R.id.nav_version) {            //版本号                已实现
-            ShowVersion();
+            showVersion();
         } else if (id == R.id.nav_exit) {               //退出应用              已实现
-            Exit();
+            exit();
         } else {
             drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
             drawerLayout.closeDrawer(GravityCompat.START);
@@ -345,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onQueryTextSubmit(String query) {
         if (!(TextUtils.isEmpty(query))) {
-            UpdateList(0, query);
+            updateList(0, query);
         }
         return false;
     }
@@ -353,7 +353,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onQueryTextChange(String newText) {
         if (TextUtils.isEmpty(newText)) {
-            UpdateList(1, newText);
+            updateList(1, newText);
         }
         return true;
     }
@@ -372,7 +372,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {  //停止拖动
-        UpdateSeekbar(seekBar);
+        updateSeekbar(seekBar);
     }
 
     /*****************************************************************************************
@@ -382,7 +382,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 载入歌曲
      **/
-    public void LoadMusic() {
+    public void loadMusic() {
         CurrentMusicItem = mMusicList.get( 0 );
         HandlerMain.post(new Runnable() {
             @Override
@@ -407,7 +407,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 查找歌曲
      **/
-    public ArrayList<MusicBean> Search(String strSearch) {
+    public ArrayList<MusicBean> search(String strSearch) {
         if (mMusicList == null) {
             Log.e("mMusicList", "null");
         } else {
@@ -424,10 +424,10 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 更新列表
      **/
-    public void UpdateList(int UpdateType, String query) {
+    public void updateList(int UpdateType, String query) {
         switch (UpdateType) {
             case 0:
-                listAdapter.setList(Search(query));
+                listAdapter.setList(search(query));
                 sendMusicList(mSearchList);
                 break;
             case 1:
@@ -483,7 +483,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 上一首
      **/
-    public void LastItem() {
+    public void lastItem() {
         if (mMusicList == null || mMusicList.size() == 0) {
             Toast.makeText(this, "Music list is empty.", Toast.LENGTH_SHORT).show();
             return;
@@ -496,7 +496,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 下一首
      **/
-    public void NextItem() {
+    public void nextItem() {
         if (mMusicList == null || mMusicList.size() == 0) {
             Toast.makeText(this, "Music list is empty.", Toast.LENGTH_SHORT).show();
             return;
@@ -509,7 +509,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 播放和暂停切换
      **/
-    public void Play_Pause() {
+    public void alterPlayAndPause() {
         if (mMusicList == null || mMusicList.size() == 0) {
             Toast.makeText(this, "Music list is empty.", Toast.LENGTH_SHORT).show();
             return;
@@ -538,7 +538,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 发送更新拖动条给Service
      **/
-    public void UpdateSeekbar(SeekBar seekBar) {
+    public void updateSeekbar(SeekBar seekBar) {
         Intent Intent_SeekTo = new Intent(TransportFlag.MainActivity);
         Intent_SeekTo.putExtra(TransportFlag.SeekTo, seekBar.getProgress());
         Intent_SeekTo.putExtra(TransportFlag.State, TransportFlag.SeekTo);
@@ -549,7 +549,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 用户提示
      **/
-    public void MessageToUser() {
+    public void messageToUser() {
         new AlertDialog.Builder(this)
                 .setTitle("Unfinished")
                 .setMessage("Application is upgrading! To be expect.")
@@ -564,7 +564,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 分享音乐
      **/
-    public void ShareMusicTo(int ShareBy) {
+    public void shareMusicTo(int ShareBy) {
         if (mtvName.getText().equals("Music Name")) {
             Toast.makeText(this, "Please choose music before sharing.", Toast.LENGTH_SHORT).show();
             return;
@@ -646,7 +646,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 发送音乐
      **/
-    public void SendMusicTo(final int SendBy) {
+    public void sendMusicTo(final int SendBy) {
         if (mtvName.getText().equals("Music Name")) {
             Toast.makeText(this, "Please choose music before sharing.", Toast.LENGTH_SHORT).show();
         } else {
@@ -710,7 +710,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 设置铃声
      **/
-    public void SetRingtone() {
+    public void setRingtone() {
         final MusicBean ringtoneMusic = CurrentMusicItem;
         if (mtvName.getText().toString().equals("Music Name")) {
             Toast.makeText(this, "Please choose music before sharing.", Toast.LENGTH_SHORT).show();
@@ -771,7 +771,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 显示版本号
      **/
-    public void ShowVersion() {
+    public void showVersion() {
         try {
             new AlertDialog.Builder(this)
                     .setTitle("Version")
@@ -790,7 +790,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * 退出应用
      **/
-    public void Exit() {
+    public void exit() {
         Intent Intent_Exit = new Intent(TransportFlag.MusicService);
         Intent_Exit.putExtra(TransportFlag.State, TransportFlag.Exit);
         //发送退出信号给Service        测试完毕
@@ -811,7 +811,7 @@ public class MainActivity extends AppCompatActivity implements
             switch (strState) {
                 case TransportFlag.LoadMusic:                                       //接收加载音乐列表    测试完毕
                     mMusicList = (ArrayList<MusicBean>) (intent.getSerializableExtra("mMusicList"));
-                    LoadMusic();
+                    loadMusic();
                     break;
                 case TransportFlag.SeekTo:                                          //接收移动拖动条至    测试完毕
                     SeekBarTo = intent.getIntExtra("SeekBarTo", 0);
