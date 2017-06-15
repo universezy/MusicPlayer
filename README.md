@@ -16,7 +16,7 @@ And in this project I did some practice about calling third-party API.
 
 ### **Main**
 
-***Main interface, you can scan your music by list add play it by clicking.***
+***Main interface, you can scan your music on list and play it by clicking.***
 
 ![](https://github.com/13608089849/MusicPlayer/blob/master/image/main.jpg)
 
