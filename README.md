@@ -34,7 +34,7 @@ And in this project I did some practice about calling third-party API.
 
 ### **Send By QQ**
 
-***Sending this music file to your QQ.**
+***Sending this music file to your QQ.***
 
 ![](https://github.com/13608089849/MusicPlayer/blob/master/image/sendByQQ.jpg)
 
