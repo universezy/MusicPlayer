@@ -12,7 +12,7 @@ And in this project I did some practice about calling third-party API.
 
 ----
 
-## Screenshoot
+## Screenshot
 
 ### **Main**
 
