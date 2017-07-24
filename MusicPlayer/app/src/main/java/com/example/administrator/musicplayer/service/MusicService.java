@@ -101,7 +101,7 @@ public class MusicService extends Service {
         IntentFilter intentFilter = new IntentFilter(TransportFlag.MainActivity);
         registerReceiver(musicServiceReceiver, intentFilter);
 
-        LoadMusic();
+        loadMusic();
 
         //设置播放线程
         RunnablePlay = new Runnable() {
@@ -187,12 +187,12 @@ public class MusicService extends Service {
     /**
      * 载入歌曲
      **/
-    public void LoadMusic() {
-        ScanMusicItem();
-        ScanLyric();
+    public void loadMusic() {
+        scanMusicItem();
+        scanLyric();
         while (!(isScanMusicItemFinished && isScanLyricFinished)) {
         }
-        MatchMusicItemWithLyric();
+        matchMusicItemWithLyric();
         while (!isMatchFinished) {
         }
         sendMusicList();
@@ -211,7 +211,7 @@ public class MusicService extends Service {
     /**
      * 扫描音乐信息
      **/
-    public void ScanMusicItem() {
+    public void scanMusicItem() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -252,13 +252,13 @@ public class MusicService extends Service {
     /**
      * 扫描歌词文件
      **/
-    public void ScanLyric() {
+    public void scanLyric() {
         //检测SD卡是否存在
         new Thread(new Runnable() {
             @Override
             public void run() {
                 if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                    Traverse(Environment.getExternalStorageDirectory());
+                    traverse(Environment.getExternalStorageDirectory());
                     isScanLyricFinished = STATUS_FINISH;
                 }
             }
@@ -268,12 +268,12 @@ public class MusicService extends Service {
     /**
      * 遍历手机SD卡查找匹配的歌词文件
      **/
-    private void Traverse(File root) {
+    private void traverse(File root) {
         File files[] = root.listFiles();
         if (files != null) {
             for (File f : files) {
                 if (f.isDirectory()) {
-                    Traverse(f);
+                    traverse(f);
                 } else {
                     if (f.getName().endsWith(".lrc")) {
                         LyricList.add(f);
@@ -287,7 +287,7 @@ public class MusicService extends Service {
     /**
      * 解析歌词文件
      **/
-    public void Parsing(MusicBean music) {
+    public void parsing(MusicBean music) {
         final MusicBean musicBean = music;
         File file = new File(musicBean.getLyricPath());
         ArrayList<LyricItem> LyricArray = new ArrayList<>();
@@ -359,7 +359,7 @@ public class MusicService extends Service {
     /**
      * 将歌词和音乐匹配
      **/
-    public void MatchMusicItemWithLyric() {
+    public void matchMusicItemWithLyric() {
         if (Status_MusicItem && Status_Lyric) {
             new Thread(new Runnable() {
                 @Override
@@ -369,7 +369,7 @@ public class MusicService extends Service {
                             if (musicBean.getMusicName().replace(" ", "").contains(file.getName().replace(" ", "").replace(".lrc", ""))
                                     || file.getName().replace(" ", "").replace(".lrc", "").contains(musicBean.getMusicName().replace(" ", ""))) {
                                 musicBean.setLyricPath(file.getAbsolutePath());
-                                Parsing(musicBean);
+                                parsing(musicBean);
                                 break;
                             }
                         }
