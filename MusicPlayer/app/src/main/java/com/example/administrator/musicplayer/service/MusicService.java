@@ -1,10 +1,13 @@
 package com.example.administrator.musicplayer.service;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -36,6 +39,7 @@ import java.util.Date;
 import java.util.Random;
 
 public class MusicService extends Service {
+    private  String TAG = getClass().getName();
     boolean mAllowRebind;       // indicates whether onRebind should be used
     /**
      * 工具实例

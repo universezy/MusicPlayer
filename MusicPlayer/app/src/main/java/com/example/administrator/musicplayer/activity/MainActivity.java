@@ -1,5 +1,6 @@
 package com.example.administrator.musicplayer.activity;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentUris;
@@ -23,6 +24,8 @@ import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
@@ -122,6 +125,8 @@ public class MainActivity extends AppCompatActivity implements
     //按钮锁
     public boolean isComponentLocked = true;
 
+    private static final int MY_PERMISSIONS_REQUEST_READ_STORAGE = 1;
+
     /*****************************************************************************************
      * *************************************    分割线    **************************************
      *****************************************************************************************/
@@ -139,6 +144,29 @@ public class MainActivity extends AppCompatActivity implements
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         initLayout();
 
+        checkPermission();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (tencent != null)
+            Tencent.onActivityResultData(requestCode, resultCode, data, new ShareListener());
+    }
+
+    public void checkPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_READ_STORAGE);
+        } else {
+            startService();
+        }
+    }
+
+    public void startService() {
         //延迟显示主界面
         HandlerMain.postDelayed(new Runnable() {
             @Override
@@ -162,14 +190,21 @@ public class MainActivity extends AppCompatActivity implements
                 }, 500);
             }
         }, 2000);
-
-
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (tencent != null)
-            Tencent.onActivityResultData(requestCode, resultCode, data, new ShareListener());
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+
+        if (requestCode == MY_PERMISSIONS_REQUEST_READ_STORAGE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startService();
+            } else {
+                // Permission Denied
+                Toast.makeText(MainActivity.this, "Permission Denied", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
@@ -383,7 +418,7 @@ public class MainActivity extends AppCompatActivity implements
      * 载入歌曲
      **/
     public void loadMusic() {
-        CurrentMusicItem = mMusicList.get( 0 );
+        CurrentMusicItem = mMusicList.get(0);
         HandlerMain.post(new Runnable() {
             @Override
             public void run() {
@@ -515,17 +550,17 @@ public class MainActivity extends AppCompatActivity implements
             return;
         }
         Intent Intent_PlayPause = new Intent(TransportFlag.MainActivity);
-        if (mtvName.getText().toString().equals( "Music Name" )) {
-            Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.PlayDefault );
+        if (mtvName.getText().toString().equals("Music Name")) {
+            Intent_PlayPause.putExtra(TransportFlag.State, TransportFlag.PlayDefault);
         } else {
             switch (mbtnPlay.getText().toString()) {
                 case "PLAY":
-                    Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.Play );
-                    mbtnPlay.setText( "PAUSE" );
+                    Intent_PlayPause.putExtra(TransportFlag.State, TransportFlag.Play);
+                    mbtnPlay.setText("PAUSE");
                     break;
                 case "PAUSE":
-                    Intent_PlayPause.putExtra( TransportFlag.State, TransportFlag.Pause );
-                    mbtnPlay.setText( "PLAY" );
+                    Intent_PlayPause.putExtra(TransportFlag.State, TransportFlag.Pause);
+                    mbtnPlay.setText("PLAY");
                     break;
                 default:
                     break;
