@@ -18,40 +18,40 @@ And in this project I did some practice about calling third-party API.
 
 ***Main interface, you can scan your music on list and play it by clicking.***
 
-![](https://github.com/13608089849/MusicPlayer/blob/master/image/main.jpg)
+![](https://github.com/frogfans/MusicPlayer/blob/master/image/main.jpg)
 
 ### **Lyric**
 
 ***This view showing lyric which is in sync with time.***
 
-![](https://github.com/13608089849/MusicPlayer/blob/master/image/lyric.jpg)
+![](https://github.com/frogfans/MusicPlayer/blob/master/image/lyric.jpg)
 
 ### **Menu**
 
 ***There are many extend function in menu.***
 
-![](https://github.com/13608089849/MusicPlayer/blob/master/image/menu.jpg)
+![](https://github.com/frogfans/MusicPlayer/blob/master/image/menu.jpg)
 
 ### **Send By QQ**
 
 ***Sending this music file to your QQ.***
 
-![](https://github.com/13608089849/MusicPlayer/blob/master/image/sendByQQ.jpg)
+![](https://github.com/frogfans/MusicPlayer/blob/master/image/sendByQQ.jpg)
 
 ### **Share to QQ friend**
 
 ***Sharing this music with your QQ friend by send digest to him or her.***
 
-![](https://github.com/13608089849/MusicPlayer/blob/master/image/shareToQQFriend.jpg)
+![](https://github.com/frogfans/MusicPlayer/blob/master/image/shareToQQFriend.jpg)
 
 ### **Share to Wechat friend**
 
 ***Sharing this music with your Wechat friend by send digest to him or her.***
 
-![](https://github.com/13608089849/MusicPlayer/blob/master/image/shareToWechatFriend.jpg)
+![](https://github.com/frogfans/MusicPlayer/blob/master/image/shareToWechatFriend.jpg)
 
 ### **Set ringtone**
 
 ***If you like this music, you can set it as ringtone.***
 
-![](https://github.com/13608089849/MusicPlayer/blob/master/image/setAsRingtone.jpg)
+![](https://github.com/frogfans/MusicPlayer/blob/master/image/setAsRingtone.jpg)
